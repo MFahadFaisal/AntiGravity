@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adli Güvenlik SOC Dashboard</title>
+    <style>
+        :root {
+            --bg: #1b1915;
+            --bg-2: #211f1a;
+            --panel: #26231d;
+            --panel-2: #2d2923;
+            --line: #3b362c;
+            --line-soft: #312d25;
+            --text: #e8e1d2;
+            --text-2: #c4bba9;
+            --muted: #8f8676;
+            --brass: #c2a66b;
+            --brass-dim: #8d7a4d;
+            --danger: #c0604a;
+            --danger-bg: rgba(192, 96, 74, 0.13);
+            --warning: #f39c12;
+            --warning-bg: rgba(243, 156, 18, 0.15);
+            --safe: #86a074;
+            --safe-bg: rgba(134, 160, 116, 0.13);
+            --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+            --sans: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+            --mono: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--sans);
+            color: var(--text);
+            background-color: var(--bg);
+            background-image: linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px);
+            background-size: 100% 28px;
+            min-height: 100vh;
+            line-height: 1.45;
+        }
+
+        button, input, select { font-family: inherit; font-size: 14px; color: inherit; }
+        button { cursor: pointer; }
+        :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+        /* ---------- Yerleşim ---------- */
+        .shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100vh; }
+
+        .side {
+            position: sticky; top: 0; height: 100vh;
+            display: flex; flex-direction: column; gap: 26px;
+            padding: 26px 18px;
+            background: var(--bg-2);
+            border-right: 1px solid var(--line);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; padding: 0 6px 20px; border-bottom: 1px solid var(--line-soft); }
+        .brand svg { flex-shrink: 0; }
+        .brand-kicker { display: block; font-size: 10.5px; letter-spacing: 0.22em; color: var(--muted); }
+        .brand strong { font-family: var(--mono); font-size: 14px; letter-spacing: 0.04em; color: var(--brass); }
+
+        .nav { display: flex; flex-direction: column; gap: 6px; }
+        .nav-btn {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            padding: 11px 12px; text-align: left;
+            background: transparent; border: 1px solid transparent; border-left: 3px solid transparent;
+            border-radius: 6px; color: var(--text-2); font-weight: 600;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .nav-btn:hover { background: var(--panel); color: var(--text); }
+        .nav-btn.active { background: var(--panel); border-left-color: var(--brass); color: var(--text); }
+        .nav-count {
+            min-width: 24px; padding: 1px 7px; text-align: center;
+            font-family: var(--mono); font-size: 11.5px; color: var(--muted);
+            background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+        }
+        .nav-btn.active .nav-count { color: var(--brass); border-color: var(--brass-dim); }
+
+        .live-box { margin-top: auto; padding: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+        .live-pill { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: var(--safe); }
+        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--safe); animation: breathe 2.4s ease-in-out infinite; }
+        .live-box.paused .live-pill { color: var(--muted); }
+        .live-box.paused .live-dot { background: var(--muted); animation: none; }
+        .live-box.offline .live-pill { color: var(--danger); }
+        .live-box.offline .live-dot { background: var(--danger); animation: none; }
+        .live-meta { margin: 8px 0 12px; font-size: 12px; color: var(--muted); font-family: var(--mono); }
+        .live-btn { width: 100%; padding: 7px 10px; background: transparent; border: 1px solid var(--line); border-radius: 6px; color: var(--text-2); font-weight: 600; font-size: 13px; }
+        .live-btn:hover { border-color: var(--brass-dim); color: var(--text); }
+        .hint { margin-top: 12px; font-size: 11.5px; color: var(--muted); }
+        kbd { padding: 0 5px; font-family: var(--mono); font-size: 11px; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; }
+
+        .main { padding: 30px 36px 50px; min-width: 0; }
+
+        /* ---------- Başlık ---------- */
+        .header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+        .header .kicker { font-size: 11px; letter-spacing: 0.24em; color: var(--brass-dim); margin-bottom: 6px; }
+        h1 { font-family: var(--serif); font-size: 29px; font-weight: 600; letter-spacing: 0.01em; color: var(--text); }
+        .header-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 6px; font-weight: 600; text-decoration: none; border: 1px solid var(--line); background: var(--panel); color: var(--text); transition: background 0.15s, border-color 0.15s; }
+        .btn:hover { background: var(--panel-2); border-color: var(--brass-dim); }
+        .btn-report, .btn-primary { background: var(--brass); border-color: var(--brass); color: #231e12; }
+        .btn-report:hover, .btn-primary:hover { background: #d1b67d; border-color: #d1b67d; }
+        .btn-warning { background: transparent; border-color: var(--brass-dim); color: var(--brass); }
+        .btn-warning:hover { background: rgba(194, 166, 107, 0.12); border-color: var(--brass); }
+        .btn-danger { background: transparent; border-color: rgba(192, 96, 74, 0.55); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); border-color: var(--danger); color: #1b1915; }
+        .btn-secondary { background: transparent; color: var(--text-2); }
+        .btn-sm-danger { padding: 5px 11px; font-size: 13px; background: transparent; border: 1px solid rgba(192, 96, 74, 0.5); border-radius: 5px; color: var(--danger); font-weight: 600; }
+        .btn-sm-danger:hover { background: var(--danger); color: #1b1915; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: rise 0.25s ease-out; }
+
+        /* ---------- İstatistik defteri ---------- */
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 18px; }
+        .card { position: relative; padding: 20px 22px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+        .card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--brass-dim); }
+        .card.safe::before { background: var(--safe); }
+        .card.blocked::before { background: var(--danger); }
+        .card.suspicious::before { background: var(--warning); }
+        .card p { font-size: 11.5px; font-weight: 700; letter-spacing: 0.2em; color: var(--muted); }
+        .card h3 { margin: 8px 0 10px; font-family: var(--serif); font-size: 46px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: var(--text); }
+        .card.safe h3 { color: var(--safe); }
+        .card.blocked h3 { color: var(--danger); }
+        .card.suspicious h3 { color: var(--warning); }
+        .card .ratio { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+        .bar { flex: 1; height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
+        .bar > b { display: block; height: 100%; width: 0; background: var(--brass-dim); transition: width 0.5s ease; }
+        .card.safe .bar > b { background: var(--safe); }
+        .card.blocked .bar > b { background: var(--danger); }
+        .card.suspicious .bar > b { background: var(--warning); }
+
+        /* ---------- Panel / Tarama şeridi ---------- */
+        .panel { padding: 18px 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+        .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+        .panel-title { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text); }
+        .panel-sub { font-size: 12px; color: var(--muted); }
+
+        .tape { display: flex; align-items: flex-end; gap: 3px; height: 62px; padding: 0 2px; border-bottom: 1px solid var(--line); }
+        .tick { flex: 1; min-width: 3px; height: var(--h, 30%); padding: 0; border: 0; border-radius: 2px 2px 0 0; background: var(--safe); opacity: 0.55; transition: opacity 0.12s, transform 0.12s; }
+        .tick.blocked { background: var(--danger); opacity: 0.9; }
+        .tick.suspicious { background: var(--warning); opacity: 0.85; }
+        .tick:hover { opacity: 1; transform: scaleY(1.06); }
+        .tape-empty { align-self: center; width: 100%; text-align: center; font-size: 13px; color: var(--muted); }
+        .tape-legend { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11.5px; color: var(--muted); font-family: var(--mono); }
+
+        .insights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 18px 0 26px; }
+        .rank { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+        .rank li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; font-size: 13px; }
+        .rank .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); font-family: var(--mono); font-size: 12.5px; }
+        .rank .num { font-family: var(--mono); color: var(--muted); font-size: 12.5px; }
+        .rank .bar { grid-column: 1 / -1; }
+        .rank .bar > b { background: var(--danger); }
+        .rank-empty { font-size: 13px; color: var(--muted); }
+
+        /* ---------- Filtreler ---------- */
+        .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+        .controls .grow { flex: 1 1 260px; }
+        input[type="text"], select { padding: 10px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; color: var(--text); }
+        input[type="text"] { width: 100%; }
+        input::placeholder { color: var(--muted); }
+        select { min-width: 170px; }
+        .result-info { margin: 0 0 8px; font-size: 12.5px; color: var(--muted); font-family: var(--mono); }
+
+        /* ---------- Tablo ---------- */
+        .table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 13px 16px; text-align: left; border-bottom: 1px solid var(--line-soft); font-size: 14px; vertical-align: top; }
+        th { background: var(--panel-2); color: var(--muted); font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; white-space: nowrap; }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { color: var(--text); }
+        tbody tr:last-child td { border-bottom: 0; }
+        tbody tr.log-row { cursor: pointer; transition: background 0.15s; }
+        tbody tr.log-row:hover { background: var(--panel-2); }
+        tbody tr.log-row td:first-child { box-shadow: inset 3px 0 0 var(--safe); }
+        tbody tr.log-row.is-blocked td:first-child { box-shadow: inset 3px 0 0 var(--danger); }
+        tbody tr.log-row.is-suspicious td:first-child { box-shadow: inset 3px 0 0 var(--warning); }
+        .empty-row { text-align: center !important; color: var(--muted); padding: 30px 16px !important; }
+
+        .c-time .t-main { display: block; font-family: var(--mono); font-size: 14px; color: var(--text); }
+        .c-time .t-sub { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+        .url-cell { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 13px; color: var(--brass); }
+        tr.log-row:hover .url-cell { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+        .score-box { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+        .sc { display: inline-flex; align-items: center; gap: 6px; }
+        .meter { display: inline-block; width: 46px; height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
+        .meter > b { display: block; height: 100%; background: var(--brass-dim); }
+        .meter.hot > b { background: var(--danger); }
+        .reason { font-weight: 500; margin-bottom: 5px; }
+        .tag { display: inline-block; padding: 2px 8px; font-size: 11px; color: var(--brass); background: var(--bg); border: 1px solid var(--line); border-radius: 3px; }
+        .type-tag { margin-left: 6px; color: var(--text-2); }
+
+        .badge, .stamp { display: inline-block; padding: 3px 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; border: 1.5px solid; border-radius: 3px; white-space: nowrap; }
+        .badge.blocked, .stamp.blocked { color: var(--danger); border-color: var(--danger); background: var(--danger-bg); }
+        .badge.suspicious, .stamp.suspicious { color: var(--warning); border-color: var(--warning); background: var(--warning-bg); }
+        .badge.safe, .stamp.safe { color: var(--safe); border-color: var(--safe); background: var(--safe-bg); }
+
+        .more-wrap { display: flex; justify-content: center; padding: 16px; }
+
+        /* ---------- Beyaz liste ---------- */
+        .section-title { margin-bottom: 6px; font-family: var(--serif); font-size: 20px; font-weight: 600; }
+        .section-title.safe { color: var(--safe); }
+        .section-title.danger { color: var(--danger); }
+        .section-desc { margin-bottom: 16px; font-size: 13px; color: var(--muted); }
+        .inline-form { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+        .inline-form input { flex: 1 1 260px; width: auto; }
+        .mono-safe { color: var(--safe); font-family: var(--mono); }
+        .mono-danger { color: var(--danger); font-family: var(--mono); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .footnote { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--line-soft); font-size: 12px; color: var(--muted); }
+
+        /* ---------- Modal ---------- */
+        .modal { display: none; position: fixed; inset: 0; z-index: 1000; align-items: center; justify-content: center; padding: 20px; background: rgba(12, 11, 8, 0.78); backdrop-filter: blur(3px); }
+        .modal.open { display: flex; }
+        .modal-content { position: relative; width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; padding: 28px 30px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--brass-dim); border-radius: 8px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55); animation: rise 0.22s ease-out; }
+        .modal-content.small { max-width: 440px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+        .modal-header h2 { font-family: var(--serif); font-size: 20px; font-weight: 600; color: var(--text); }
+        .close-btn { background: none; border: 0; color: var(--muted); font-size: 26px; line-height: 1; }
+        .close-btn:hover { color: var(--text); }
+        .modal-body p { font-size: 14px; color: var(--text-2); }
+        .case-stamp { margin: 0 0 16px; }
+        .case-stamp .stamp { font-size: 13px; padding: 5px 14px; transform: rotate(-2deg); }
+        .dl { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 0; }
+        .dl dt, .dl dd { padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+        .dl dt { color: var(--muted); font-weight: 600; }
+        .dl dd { color: var(--text); word-break: break-all; }
+        .dl dd.link { color: var(--brass); font-family: var(--mono); font-size: 13px; }
+        .mini-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .mini-btn { padding: 3px 10px; font-size: 12px; background: transparent; border: 1px solid var(--line); border-radius: 4px; color: var(--text-2); }
+        .mini-btn:hover { border-color: var(--brass-dim); color: var(--brass); }
+        .big-scores { display: grid; gap: 8px; }
+        .big-scores .row { display: grid; grid-template-columns: 60px 1fr 34px; gap: 10px; align-items: center; font-family: var(--mono); font-size: 12.5px; }
+        .big-scores .meter { width: 100%; height: 6px; }
+        .modal-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        /* ---------- Bildirimler ---------- */
+        #toasts { position: fixed; right: 20px; bottom: 20px; z-index: 1200; display: flex; flex-direction: column; gap: 8px; }
+        .toast { max-width: 360px; padding: 11px 16px; font-size: 13.5px; background: var(--panel-2); border: 1px solid var(--line); border-left: 3px solid var(--safe); border-radius: 5px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); animation: rise 0.2s ease-out; transition: opacity 0.3s; }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.info { border-left-color: var(--brass); }
+        .toast.out { opacity: 0; }
+
+        @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+        @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+        /* ---------- Dar ekran ---------- */
+        @media (max-width: 960px) {
+            .shell { grid-template-columns: 1fr; }
+            .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px; padding: 14px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
+            .brand { padding: 0; border: 0; }
+            .nav { flex-direction: row; flex-wrap: wrap; flex: 1; }
+            .live-box { margin-top: 0; }
+            .hint { display: none; }
+            .main { padding: 22px 16px 40px; }
+            .stats, .insights { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="shell">
+
+    <!-- YAN PANEL -->
+    <aside class="side">
+        <div class="brand">
+            <svg width="34" height="38" viewBox="0 0 34 38" fill="none" stroke="#c2a66b" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17 2 3 7v10c0 9 6 16.5 14 19 8-2.5 14-10 14-19V7L17 2z"/>
+                <circle cx="16" cy="17" r="5.5"/>
+                <path d="m20 21 5 5" stroke-linecap="round"/>
+            </svg>
+            <div>
+                <span class="brand-kicker">VAKA DOSYASI</span>
+                <strong id="caseId">AG-00000000</strong>
+            </div>
+        </div>
+
+        <nav class="nav" role="tablist" aria-label="Bölümler">
+            <button class="nav-btn active" role="tab" aria-selected="true" onclick="switchTab('logsTab', this)">
+                <span>📊 Canlı Tarama Logları</span><span class="nav-count" id="navLogs">0</span>
+            </button>
+            <button class="nav-btn" role="tab" aria-selected="false" onclick="switchTab('whiteTab', this)">
+                <span>✅ Beyaz Liste (Güvenli Alanlar)</span><span class="nav-count" id="navWhite">–</span>
+            </button>
+            <button class="nav-btn" role="tab" aria-selected="false" onclick="switchTab('blackTab', this)">
+                <span>🚨 Kara Liste Kuralları (Engellenenler)</span><span class="nav-count" id="navBlack">0</span>
+            </button>
+        </nav>
+
+        <div class="live-box" id="liveBox">
+            <div class="live-pill"><span class="live-dot"></span><span id="liveText">CANLI</span></div>
+            <div class="live-meta" id="lastUpdate">Son güncelleme: –</div>
+            <button class="live-btn" id="liveBtn" onclick="toggleLive()">Akışı Duraklat</button>
+            <p class="hint"><kbd>/</kbd> ara &nbsp; <kbd>Esc</kbd> kapat</p>
+        </div>
+    </aside>
+
+    <!-- ANA ALAN -->
+    <main class="main">
+        <div class="header">
+            <div>
+                <div class="kicker">ADLİ BİLİŞİM İZLEME MERKEZİ</div>
+                <h1>🛡️ Adli Güvenlik SOC Dashboard</h1>
+            </div>
+            <div class="header-btns">
+                <button class="btn btn-report" onclick="exportReport()">📋 Adli Rapor İndir (JSON)</button>
+                <button class="btn" onclick="exportCsv()">📑 CSV İndir</button>
+                <button class="btn btn-danger" onclick="clearLogsConfirm()">🗑️ Logları Sıfırla</button>
+            </div>
+        </div>
+
+        <!-- 1. SEKME: LOGLAR -->
+        <section id="logsTab" class="tab-content active">
+            <div class="stats">
+                <div class="card total">
+                    <p>TOPLAM TARAMA</p><h3 id="total-count">0</h3>
+                    <div class="ratio"><span>tüm kayıtlar</span></div>
+                </div>
+                <div class="card safe">
+                    <p>GÜVENLİ BULUNAN</p><h3 id="safe-count">0</h3>
+                    <div class="ratio"><div class="bar"><b id="safeBar"></b></div><span id="safePct">%0</span></div>
+                </div>
+                <div class="card blocked">
+                    <p>ENGELLENEN TEHDİT</p><h3 id="blocked-count">0</h3>
+                    <div class="ratio"><div class="bar"><b id="blockedBar"></b></div><span id="blockedPct">%0</span></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <span class="panel-title">Tarama Şeridi</span>
+                    <span class="panel-sub">son 80 tarama · kırmızı = engellenen, sarı = şüpheli · tıkla: detay</span>
+                </div>
+                <div class="tape" id="tape"></div>
+                <div class="tape-legend"><span>← eski</span><span>yeni →</span></div>
+            </div>
+
+            <div class="insights">
+                <div class="panel">
+                    <div class="panel-head"><span class="panel-title">Tehdit Türleri</span><span class="panel-sub">engellenenler ve şüpheliler</span></div>
+                    <ul class="rank" id="typeRank"></ul>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><span class="panel-title">En Çok Engellenen / Şüpheli Alanlar</span><span class="panel-sub">ilk 6</span></div>
+                    <ul class="rank" id="domainRank"></ul>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="grow"><input type="text" id="searchInput" placeholder="🔍 URL veya sebep ara..." onkeyup="filterLogs()" autocomplete="off"></div>
+                <select id="statusFilter" onchange="filterLogs()" aria-label="Durum filtresi">
+                    <option value="all">Tüm Durumlar</option>
+                    <option value="blocked">Engellenenler</option>
+                    <option value="suspicious">Şüpheliler</option>
+                    <option value="safe">Güvenliler</option>
+                </select>
+                <select id="typeFilter" onchange="filterLogs()" aria-label="Tür filtresi">
+                    <option value="all">Tüm Türler</option>
+                    <option value="explicit">Cinsel İçerik</option>
+                    <option value="phishing">Oltalama / Zararlı URL</option>
+                    <option value="gambling">Bahis / Kumar</option>
+                    <option value="other">Diğer</option>
+                </select>
+            </div>
+            <p class="result-info" id="resultInfo"></p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="sortable" id="sortTime" onclick="toggleSort()" title="Sıralamayı değiştir">TARİH/SAAT ↓</th>
+                            <th>URL VE SKORLAR (Detay için tıkla)</th>
+                            <th>TESPİT SEBEBİ</th>
+                            <th>DURUM</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table">
+                        <tr><td colspan="4" class="empty-row">Yükleniyor...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="more-wrap" id="moreWrap" style="display:none;">
+                <button class="btn" onclick="showMore()" id="moreBtn">Daha fazla göster</button>
+            </div>
+        </section>
+
+        <!-- 2. SEKME: BEYAZ LİSTE -->
+        <section id="whiteTab" class="tab-content">
+            <h2 class="section-title safe">✨ Beyaz Listeye Eklenmiş Güvenli Alan Adları</h2>
+            <p class="section-desc">Bu alan adları taramadan muaf tutulur. Yalnızca güvendiğiniz alanları ekleyin.</p>
+            <div class="inline-form">
+                <input type="text" id="whiteInput" placeholder="ornek.com" autocomplete="off" onkeydown="if(event.key==='Enter') addWhitelistManual()">
+                <button class="btn btn-primary" onclick="addWhitelistManual()">+ Alan Adı Ekle</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>ID</th><th>ALAN ADI (DOMAIN)</th><th>İŞLEM</th></tr></thead>
+                    <tbody id="whitelist-table">
+                        <tr><td colspan="3" class="empty-row">Yükleniyor...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 3. SEKME: KARA LİSTE -->
+        <section id="blackTab" class="tab-content">
+            <h2 class="section-title danger">🚨 Aktif Engellenen Tehdit Logları (Kara Liste Geçmişi)</h2>
+            <p class="section-desc">Engellenen son kayıtlar. Ayrıntı için satıra tıklayın.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>TARİH/SAAT</th><th>TEHDİT URL</th><th>ENGELLEME SEBEBİ</th><th>TESPİT EDEN</th></tr></thead>
+                    <tbody id="blacklist-table">
+                        <tr><td colspan="4" class="empty-row">Engellenen tehdit bulunmuyor.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <p class="footnote">Veriler yalnızca bu bilgisayarda (127.0.0.1) tutulur. Engellenen adresleri tarayıcıda açmayın; kopyalamak için “Güvenli kopyala” kullanın.</p>
+    </main>
+</div>
+
+<!-- DETAY PENCERESİ -->
+<div id="detailModal" class="modal" onclick="if(event.target===this) closeModal()">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header">
+            <h2 id="modalTitle">🔍 Adli İşlem Detayı</h2>
+            <button class="close-btn" onclick="closeModal()" aria-label="Kapat">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer">
+            <div class="btn-row">
+                <button id="whitelistBtn" class="btn btn-warning">✨ Beyaz Listeye Ekle</button>
+                <a id="downloadBtn" href="#" target="_blank" class="btn btn-primary" style="display:none;">📥 HTML Kanıt İndir</a>
+            </div>
+            <button class="btn btn-secondary" onclick="closeModal()">Kapat</button>
+        </div>
+    </div>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+    const API = location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
+    const PAGE_SIZE = 50;
+    const TYPE_LABELS = { explicit: 'Cinsel İçerik', phishing: 'Oltalama / Zararlı URL', gambling: 'Bahis / Kumar', other: 'Diğer' };
+
+    let allLogs = [];
+    let stats = { total: 0, safe: 0, blocked: 0 };
+    let visibleCount = PAGE_SIZE;
+    let sortDesc = true;
+    let live = true;
+    let lastSig = '';
+
+    /* ---------- Yardımcılar ---------- */
+    const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ESC[c]);
+    const pct = v => Math.max(0, Math.min(100, Number(v) || 0));
+    const $ = id => document.getElementById(id);
+
+    function getActionStatus(log) {
+        const st = String(log.action || log.status || log.durum || '').toUpperCase();
+        if (st === 'BLOCK' || st === 'ENGELLENDİ') return 'blocked';
+        if (st === 'SUSPICIOUS' || st === 'ŞÜPHELİ') return 'suspicious';
+        return 'safe';
+    }
+
+    function isFake(log) { return getActionStatus(log) === 'blocked'; }
+    function fmtTime(log) { return log.time || String(log.timestamp || '').slice(11, 16) || '-'; }
+    function fmtDate(log) { return log.date || String(log.timestamp || '').slice(0, 10) || ''; }
+    function logReason(log) { return log.reason || log.details || '-'; }
+
+    function hostOf(url) {
+        try { return new URL(url).hostname || ''; } catch (e) { return ''; }
+    }
+    function normalizeDomain(value) {
+        let v = String(value || '').trim().toLowerCase();
+        if (!v) return '';
+        if (!/^[a-z][a-z0-9+.-]*:\/\//.test(v)) v = 'http://' + v;
+        try { return new URL(v).hostname; } catch (e) { return ''; }
+    }
+    function defang(url) {
+        try {
+            const u = new URL(url);
+            return u.protocol.replace('http', 'hxxp') + '//' + u.host.replace(/\./g, '[.]') + u.pathname + u.search + u.hash;
+        } catch (e) { return String(url).replace(/^http/i, 'hxxp').replace(/\./g, '[.]'); }
+    }
+    function threatType(log) {
+        if (getActionStatus(log) === 'safe') return 'safe';
+        const r = logReason(log).toLowerCase();
+        if (r.includes('cinsel')) return 'explicit';
+        if (r.includes('phishing') || r.includes('oltalama') || r.includes('zararlı') || r.includes('sahte')) return 'phishing';
+        if (r.includes('bahis') || r.includes('kumar')) return 'gambling';
+        return 'other';
+    }
+
+    function toast(msg, type = 'ok') {
+        const t = document.createElement('div');
+        t.className = 'toast ' + type;
+        t.textContent = msg;
+        $('toasts').appendChild(t);
+        setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 3800);
+    }
+
+    function confirmDialog({ title, message, okText = 'Onayla', danger = false }) {
+        return new Promise(resolve => {
+            const wrap = document.createElement('div');
+            wrap.className = 'modal open';
+            wrap.style.zIndex = 1100;
+            wrap.innerHTML = `
+                <div class="modal-content small" role="alertdialog" aria-modal="true">
+                    <div class="modal-header"><h2>${esc(title)}</h2></div>
+                    <div class="modal-body"><p>${esc(message)}</p></div>
+                    <div class="modal-footer"><span></span>
+                        <div class="btn-row">
+                            <button class="btn btn-secondary" data-r="0">Vazgeç</button>
+                            <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-r="1">${esc(okText)}</button>
+                        </div>
+                    </div>
+                </div>`;
+            const done = v => { document.removeEventListener('keydown', onKey, true); wrap.remove(); resolve(v); };
+            const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } };
+            wrap.addEventListener('click', e => {
+                if (e.target === wrap) return done(false);
+                const b = e.target.closest('[data-r]');
+                if (b) done(b.dataset.r === '1');
+            });
+            document.addEventListener('keydown', onKey, true);
+            document.body.appendChild(wrap);
+            wrap.querySelector('[data-r="0"]').focus();
+        });
+    }
+
+    function downloadBlob(blob, name) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+    function stampName(ext) {
+        const d = new Date(), p = n => String(n).padStart(2, '0');
+        return `adli-rapor-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.${ext}`;
+    }
+
+    /* ---------- Sekmeler ---------- */
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('active'); el.setAttribute('aria-selected', 'false'); });
+        $(tabId).classList.add('active');
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        if (tabId === 'whiteTab') fetchWhitelist();
+    }
+
+    /* ---------- Veri çekme ---------- */
+    async function fetchLogs() {
+        try {
+            const res = await fetch(API + '/api/logs');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            const logs = Array.isArray(data.logs) ? data.logs : [];
+            const st = data.stats || {};
+            stats = {
+                total: data.total ?? st.total ?? logs.length,
+                safe: data.safe ?? st.safe ?? logs.filter(l => getActionStatus(l) === 'safe').length,
+                blocked: data.blocked ?? st.blocked ?? logs.filter(l => getActionStatus(l) === 'blocked').length
+            };
+            allLogs = logs;
+            setConn(true);
+            const sig = [stats.total, stats.blocked, logs.length, logs.length ? logs[0].id : ''].join('|');
+            if (sig !== lastSig) { lastSig = sig; renderAll(); }
+        } catch (e) {
+            setConn(false);
+            console.error(e);
+        }
+    }
+
+    function setConn(ok) {
+        const box = $('liveBox');
+        box.classList.toggle('offline', !ok);
+        box.classList.toggle('paused', ok && !live);
+        $('liveText').textContent = !ok ? 'BAĞLANTI YOK' : (live ? 'CANLI' : 'DURAKLATILDI');
+        if (ok) {
+            const n = new Date(), p = x => String(x).padStart(2, '0');
+            $('lastUpdate').textContent = `Son güncelleme: ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+        }
+    }
+
+    function toggleLive() {
+        live = !live;
+        $('liveBtn').textContent = live ? 'Akışı Duraklat' : 'Akışı Sürdür';
+        setConn(!$('liveBox').classList.contains('offline'));
+        if (live) fetchLogs();
+    }
+
+    /* ---------- Çizim ---------- */
+    function renderAll() {
+        renderStats();
+        renderTape();
+        renderInsights();
+        renderTable();
+        renderBlacklistTable();
+    }
+
+    function renderStats() {
+        $('total-count').textContent = stats.total;
+        $('safe-count').textContent = stats.safe;
+        $('blocked-count').textContent = stats.blocked;
+        const t = stats.total || 0;
+        const sp = t ? Math.round(stats.safe / t * 100) : 0;
+        const bp = t ? Math.round(stats.blocked / t * 100) : 0;
+        $('safePct').textContent = '%' + sp;
+        $('blockedPct').textContent = '%' + bp;
+        $('safeBar').style.width = sp + '%';
+        $('blockedBar').style.width = bp + '%';
+        $('navLogs').textContent = stats.total;
+        $('navBlack').textContent = stats.blocked;
+    }
+
+    function renderTape() {
+        const el = $('tape');
+        const recent = allLogs.slice(0, 80).reverse();
+        if (!recent.length) { el.innerHTML = '<div class="tape-empty">Henüz tarama kaydı yok</div>'; return; }
+        el.innerHTML = recent.map(l => {
+            const st = getActionStatus(l);
+            let h = 22;
+            if (st === 'blocked') h = 38 + 0.6 * Math.max(pct(l.url_score), pct(l.text_score));
+            else if (st === 'suspicious') h = 30 + 0.5 * Math.max(pct(l.url_score), pct(l.text_score));
+            const tip = `${fmtDate(l)} ${fmtTime(l)} — ${l.url}`;
+            return `<button class="tick ${st}" style="--h:${h}%" data-id="${esc(l.id)}" title="${esc(tip)}" aria-label="${esc(tip)}"></button>`;
+        }).join('');
+    }
+
+    function rankHtml(items, max, emptyText) {
+        if (!items.length) return `<li class="rank-empty">${esc(emptyText)}</li>`;
+        return items.map(([name, n]) => `
+            <li><span class="name" title="${esc(name)}">${esc(name)}</span><span class="num">${n}</span>
+            <div class="bar"><b style="width:${Math.round(n / max * 100)}%"></b></div></li>`).join('');
+    }
+
+    function renderInsights() {
+        const threats = allLogs.filter(l => getActionStatus(l) !== 'safe');
+        const types = {}, domains = {};
+        threats.forEach(l => {
+            const t = TYPE_LABELS[threatType(l)] || 'Diğer';
+            types[t] = (types[t] || 0) + 1;
+            const h = hostOf(l.url) || l.domain || '(bilinmiyor)';
+            domains[h] = (domains[h] || 0) + 1;
+        });
+        const tArr = Object.entries(types).sort((a, b) => b[1] - a[1]);
+        const dArr = Object.entries(domains).sort((a, b) => b[1] - a[1]).slice(0, 6);
+        $('typeRank').innerHTML = rankHtml(tArr, tArr.length ? tArr[0][1] : 1, 'Tehdit kaydı yok');
+        $('domainRank').innerHTML = rankHtml(dArr, dArr.length ? dArr[0][1] : 1, 'Şüpheli/engellenen alan yok');
+    }
+
+    function getFiltered() {
+        const q = $('searchInput').value.toLowerCase();
+        const status = $('statusFilter').value;
+        const type = $('typeFilter').value;
+        let list = allLogs.filter(l => {
+            const hay = (String(l.url || '') + ' ' + logReason(l)).toLowerCase();
+            if (q && !hay.includes(q)) return false;
+            const st = getActionStatus(l);
+            if (status === 'blocked' && st !== 'blocked') return false;
+            if (status === 'suspicious' && st !== 'suspicious') return false;
+            if (status === 'safe' && st !== 'safe') return false;
+            if (type !== 'all' && threatType(l) !== type) return false;
+            return true;
+        });
+        if (!sortDesc) list = list.slice().reverse();
+        return list;
+    }
+
+    function scoreHtml(label, v) {
+        const n = pct(v);
+        return `<span class="sc">${label} ${n}<i class="meter ${n >= 60 ? 'hot' : ''}"><b style="width:${n}%"></b></i></span>`;
+    }
+
+    function statusBadge(log) {
+        const st = getActionStatus(log);
+        if (st === 'blocked') return '<span class="badge blocked">ENGELLENDİ</span>';
+        if (st === 'suspicious') return '<span class="badge suspicious">ŞÜPHELİ</span>';
+        return '<span class="badge safe">GÜVENLİ</span>';
+    }
+
+    function logRow(log) {
+        const st = getActionStatus(log);
+        const rowClass = st === 'blocked' ? 'is-blocked' : (st === 'suspicious' ? 'is-suspicious' : '');
+        const type = threatType(log);
+        return `
+        <tr class="log-row ${rowClass}" data-id="${esc(log.id)}">
+            <td class="c-time"><span class="t-main">${esc(fmtTime(log))}</span><span class="t-sub">${esc(fmtDate(log))}</span></td>
+            <td>
+                <div class="url-cell" title="Tam Adres: ${esc(log.url)}">${esc(log.url)}</div>
+                <div class="score-box">${scoreHtml('URL', log.url_score)}${scoreHtml('Metin', log.text_score)}</div>
+            </td>
+            <td>
+                <div class="reason">${esc(logReason(log))}</div>
+                <span class="tag">Tespit Eden: ${esc(log.detector || 'Bilinmiyor')}</span>${st !== 'safe' ? `<span class="tag type-tag">${esc(TYPE_LABELS[type] || 'Diğer')}</span>` : ''}
+            </td>
+            <td>${statusBadge(log)}</td>
+        </tr>`;
+    }
+
+    function renderTable() {
+        const tbody = $('logs-table');
+        const list = getFiltered();
+        const shown = list.slice(0, visibleCount);
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Kayıt bulunamadı.</td></tr>';
+        } else {
+            tbody.innerHTML = shown.map(logRow).join('');
+        }
+        $('resultInfo').textContent = list.length ? `${shown.length} / ${list.length} kayıt gösteriliyor` : '';
+        const rest = list.length - shown.length;
+        $('moreWrap').style.display = rest > 0 ? 'flex' : 'none';
+        $('moreBtn').textContent = `Daha fazla göster (${rest} kayıt daha)`;
+        $('sortTime').textContent = sortDesc ? 'TARİH/SAAT ↓' : 'TARİH/SAAT ↑';
+    }
+
+    function renderBlacklistTable() {
+        const tbody = $('blacklist-table');
+        const blocked = allLogs.filter(l => getActionStatus(l) === 'blocked').slice(0, 200);
+        if (!blocked.length) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Engellenen tehdit bulunmuyor.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = blocked.map(log => `
+            <tr class="log-row is-blocked" data-id="${esc(log.id)}">
+                <td class="c-time"><span class="t-main">${esc(fmtTime(log))}</span><span class="t-sub">${esc(fmtDate(log))}</span></td>
+                <td><div class="mono-danger" title="${esc(log.url)}">${esc(log.url)}</div></td>
+                <td>${esc(logReason(log))}</td>
+                <td><span style="color: var(--brass);">${esc(log.detector || 'Bilinmiyor')}</span></td>
+            </tr>`).join('');
+    }
+
+    function filterLogs() { visibleCount = PAGE_SIZE; renderTable(); }
+    function showMore() { visibleCount += PAGE_SIZE; renderTable(); }
+    function toggleSort() { sortDesc = !sortDesc; renderTable(); }
+
+    /* ---------- Detay penceresi ---------- */
+    async function openDetails(id) {
+        let data = allLogs.find(l => String(l.id) === String(id)) || null;
+        data = data ? { ...data } : null;
+        try {
+            const res = await fetch(`${API}/api/details/${encodeURIComponent(id)}`);
+            if (res.ok) {
+                const d = await res.json();
+                if (d && d.url) data = { ...(data || {}), ...d };
+            }
+        } catch (e) { /* yoksay */ }
+        if (!data) { toast('Kayıt bulunamadı.', 'error'); return; }
+
+        const st = getActionStatus(data);
+        const url = String(data.url || '');
+        const when = data.timestamp || `${fmtDate(data)} ${fmtTime(data)}`.trim() || '-';
+        const row = (label, value, cls = '') => `<dt>${label}</dt><dd class="${cls}">${value}</dd>`;
+
+        let stampText = 'GÜVENLİ';
+        let stampClass = 'safe';
+        let statusHtml = '<span style="color:var(--safe); font-weight:700;">Güvenli</span>';
+
+        if (st === 'blocked') {
+            stampText = 'TEHDİT / ENGELLENDİ';
+            stampClass = 'blocked';
+            statusHtml = '<span style="color:var(--danger); font-weight:700;">Tehdit / Engellendi</span>';
+        } else if (st === 'suspicious') {
+            stampText = 'ŞÜPHELİ İÇERİK';
+            stampClass = 'suspicious';
+            statusHtml = '<span style="color:var(--warning); font-weight:700;">Şüpheli</span>';
+        }
+
+        $('modalBody').innerHTML = `
+            <div class="case-stamp"><span class="stamp ${stampClass}">${stampText}</span></div>
+            <dl class="dl">
+                ${row('Zaman:', esc(when))}
+                <dt>Hedef URL:</dt>
+                <dd class="link">${esc(url || '-')}
+                    <div class="mini-actions">
+                        <button class="mini-btn" id="copyUrl">Kopyala</button>
+                        <button class="mini-btn" id="copyDefang">Güvenli kopyala (hxxp)</button>
+                    </div>
+                </dd>
+                ${row('Alan Adı:', esc(hostOf(url) || data.domain || '-'))}
+                ${row('Durum:', statusHtml)}
+                ${row('Sebep:', esc(logReason(data)))}
+                ${row('Tespit Eden:', `<span style="color: var(--brass); font-weight: 700;">${esc(data.detector || 'Bilinmiyor')}</span>`)}
+                <dt>Skorlar:</dt>
+                <dd><div class="big-scores">
+                    <div class="row"><span>URL</span><i class="meter ${pct(data.url_score) >= 60 ? 'hot' : ''}"><b style="width:${pct(data.url_score)}%"></b></i><span>${pct(data.url_score)}</span></div>
+                    <div class="row"><span>Metin</span><i class="meter ${pct(data.text_score) >= 60 ? 'hot' : ''}"><b style="width:${pct(data.text_score)}%"></b></i><span>${pct(data.text_score)}</span></div>
+                </div></dd>
+            </dl>`;
+
+        const copy = async text => {
+            try { await navigator.clipboard.writeText(text); toast('Panoya kopyalandı.'); }
+            catch (e) { toast('Kopyalanamadı.', 'error'); }
+        };
+        $('copyUrl').onclick = () => copy(url);
+        $('copyDefang').onclick = () => copy(defang(url));
+        $('whitelistBtn').onclick = () => addWhitelist(url);
+
+        const downloadBtn = $('downloadBtn');
+        if (data.has_evidence) {
+            downloadBtn.href = `${API}/api/evidence/${encodeURIComponent(id)}`;
+            downloadBtn.style.display = 'inline-flex';
+        } else {
+            downloadBtn.style.display = 'none';
+        }
+        $('detailModal').classList.add('open');
+    }
+
+    function closeModal() { $('detailModal').classList.remove('open'); }
+
+    /* ---------- Beyaz liste ---------- */
+    async function fetchWhitelist() {
+        const tbody = $('whitelist-table');
+        try {
+            const res = await fetch(API + '/api/whitelist');
+            const list = res.ok ? await res.json() : null;
+            if (!Array.isArray(list)) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Beyaz liste servisi kullanılamıyor.</td></tr>';
+                $('navWhite').textContent = '–';
+                return;
+            }
+            $('navWhite').textContent = list.length;
+            if (!list.length) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Beyaz listede kayıt bulunmuyor.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = list.map(item => `
+                <tr>
+                    <td>${esc(item.id)}</td>
+                    <td class="mono-safe">${esc(item.domain)}</td>
+                    <td><button class="btn-sm-danger" data-remove="${esc(item.domain)}">🗑️ Listeden Çıkar</button></td>
+                </tr>`).join('');
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Beyaz liste yüklenemedi.</td></tr>';
+        }
+    }
+
+    async function removeWhitelist(domain) {
+        const ok = await confirmDialog({
+            title: 'Beyaz Listeden Çıkar',
+            message: `${domain} adresini beyaz listeden çıkarmak istediğinize emin misiniz?`,
+            okText: 'Evet, çıkar', danger: true
+        });
+        if (!ok) return;
+        try {
+            const res = await fetch(API + '/api/whitelist/remove', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || 'Listeden çıkarılamadı.');
+            toast(data.message || 'Listeden çıkarıldı.');
+        } catch (e) { toast(e.message || 'Listeden çıkarılamadı.', 'error'); }
+        fetchWhitelist();
+    }
+
+    async function addWhitelist(urlOrDomain) {
+        const domain = normalizeDomain(urlOrDomain);
+        if (!domain) { toast('Geçerli bir alan adı girin.', 'error'); return false; }
+        try {
+            const res = await fetch(API + '/api/whitelist/add', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || 'Beyaz listeye eklenemedi.');
+            toast(data.message || `${domain} beyaz listeye eklendi.`);
+            closeModal();
+            lastSig = '';
+            fetchLogs();
+            if ($('whiteTab').classList.contains('active')) fetchWhitelist();
+            return true;
+        } catch (e) {
+            toast(e.message || 'Beyaz listeye eklenemedi.', 'error');
+            return false;
+        }
+    }
+
+    async function addWhitelistManual() {
+        const input = $('whiteInput');
+        if (await addWhitelist(input.value)) input.value = '';
+    }
+
+    /* ---------- Rapor / temizleme ---------- */
+    async function exportReport() {
+        let blob = null;
+        try {
+            const res = await fetch(API + '/api/export-report');
+            if (res.ok) blob = await res.blob();
+        } catch (e) { /* yerel rapora düş */ }
+        if (!blob) {
+            const report = {
+                olusturulma: new Date().toISOString(),
+                ozet: stats,
+                kayitlar: allLogs
+            };
+            blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+        }
+        downloadBlob(blob, stampName('json'));
+        toast('Adli rapor indirildi.');
+    }
+
+    function exportCsv() {
+        const cols = ['id', 'timestamp', 'url', 'domain', 'action', 'reason', 'detector', 'url_score', 'text_score'];
+        const cell = v => {
+            let s = String(v ?? '');
+            if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+            return '"' + s.replace(/"/g, '""') + '"';
+        };
+        const lines = [cols.join(',')].concat(allLogs.map(l => cols.map(c => cell(l[c])).join(',')));
+        downloadBlob(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }), stampName('csv'));
+        toast('CSV indirildi.');
+    }
+
+    async function clearLogsConfirm() {
+        const ok = await confirmDialog({
+            title: 'Logları Sıfırla',
+            message: 'Tüm log verileri kalıcı olarak silinecek. Bu işlem geri alınamaz.',
+            okText: 'Evet, sil', danger: true
+        });
+        if (!ok) return;
+        let done = false;
+        try {
+            let res = await fetch(API + '/api/clear-logs', { method: 'POST' });
+            done = res.ok;
+            if (!done) { res = await fetch(API + '/api/logs', { method: 'DELETE' }); done = res.ok; }
+        } catch (e) { /* aşağıda bildirilir */ }
+        if (done) { toast('Tüm loglar temizlendi.'); lastSig = ''; fetchLogs(); }
+        else toast('Loglar silinemedi.', 'error');
+    }
+
+    /* ---------- Olaylar ---------- */
+    document.addEventListener('click', e => {
+        const rm = e.target.closest('[data-remove]');
+        if (rm) { removeWhitelist(rm.dataset.remove); return; }
+        const el = e.target.closest('[data-id]');
+        if (el) openDetails(el.dataset.id);
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeModal();
+        const typing = /^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '');
+        if (e.key === '/' && !typing) {
+            e.preventDefault();
+            const logsBtn = document.querySelector('.nav-btn');
+            if (!$('logsTab').classList.contains('active')) switchTab('logsTab', logsBtn);
+            $('searchInput').focus();
+        }
+    });
+
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && live) fetchLogs(); });
+
+    /* ---------- Başlat ---------- */
+    (function init() {
+        const d = new Date(), p = n => String(n).padStart(2, '0');
+        $('caseId').textContent = `AG-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
+        setInterval(() => { if (live && !document.hidden) fetchLogs(); }, 3000);
+        fetchLogs();
+        fetchWhitelist();
+    })();
+</script>
+</body>
+</html>

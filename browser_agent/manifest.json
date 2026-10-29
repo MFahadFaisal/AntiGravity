@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "AntiGravity Agent",
+  "version": "1.0",
+  "description": "Gerçek zamanlı oltalama ve sahte içerik tespiti.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "notifications"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
