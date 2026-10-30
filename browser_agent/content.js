@@ -6,7 +6,7 @@ window.addEventListener("load", () => {
     const pageText = document.body ? document.body.innerText.substring(0, 1500) : "";
     const htmlSource = document.documentElement ? document.documentElement.outerHTML.substring(0, 100000) : "";
 
-    if (currentUrl.includes("127.0.0.1:8000") || currentUrl.startsWith("chrome-extension://")) return;
+    if (currentUrl.includes("127.0.0.1:8001") || currentUrl.startsWith("chrome-extension://")) return;
 
     // DOM Gözlemcisi: Sayfaya sonradan dinamik eklenen şüpheli iframe veya scriptleri engeller
     try {
@@ -85,7 +85,7 @@ function enableSpecificLinkInterception() {
         if (!target || !target.href || typeof target.href !== "string") return;
 
         const clickedUrl = target.href;
-        if (clickedUrl.startsWith("chrome-extension://") || clickedUrl.includes("127.0.0.1:8000")) return;
+        if (clickedUrl.startsWith("chrome-extension://") || clickedUrl.includes("127.0.0.1:8001")) return;
 
         if (!/^https?:/i.test(clickedUrl)) return;
         if (clickedUrl.split("#")[0] === window.location.href.split("#")[0]) return;

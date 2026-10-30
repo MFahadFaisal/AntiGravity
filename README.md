@@ -44,5 +44,5 @@ FastAPI üzerinden yayın yapan entegre bir \*\*Güvenlik Operasyon Merkezi (SOC
 
 4\. "Geliştirici modu"nu açın ve "Paketlenmemiş öğe yükle" diyerek `browser\_agent` klasörünü seçin.
 
-5\. Canlı logları izlemek için tarayıcıda `http://127.0.0.1:8000/dashboard` adresine gidin.
+5\. Canlı logları izlemek için tarayıcıda `http://127.0.0.1:8001/dashboard` adresine gidin.
 
