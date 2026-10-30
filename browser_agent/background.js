@@ -1,3 +1,9 @@
+try {
+    importScripts('antigravity_client_engine.js');
+} catch (e) {
+    console.warn("AntiGravity Client Engine could not be imported via importScripts:", e);
+}
+
 const tabSecurityStatus = {};
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8001";
 
@@ -95,6 +101,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true;
         }
 
+        // Sub-millisecond Client AI Pre-evaluation (32-Feature Offline Model)
+        let clientDecision = null;
+        if (typeof AntiGravityClientEngine !== 'undefined') {
+            try {
+                clientDecision = AntiGravityClientEngine.predict(request.url);
+                // If definitive zero-day threat with extreme confidence, edge block immediately
+                if (clientDecision && clientDecision.is_fake && clientDecision.url_score >= 88) {
+                    clientDecision.is_hard_block = true;
+                    clientDecision.block = true;
+                    tabSecurityStatus[tabId] = {
+                        url: request.url,
+                        data: clientDecision,
+                        timestamp: Date.now()
+                    };
+                    sendResponse(clientDecision);
+                    return true;
+                }
+            } catch (e) {
+                console.debug("Client AI pre-check error:", e);
+            }
+        }
+
         // Full SOC Deep Inspection via Python AI Engine
         getServerUrl().then((serverUrl) => {
             fetch(`${serverUrl}/analyze`, {
@@ -121,11 +149,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse(data);
             })
             .catch(error => {
-                console.warn("AntiGravity AI Engine Offline. Edge heuristic active:", error);
-                const fallback = edgeDecision || {
+                console.warn("AntiGravity Backend Offline. Offline 32-feature AI active:", error);
+                const fallback = clientDecision || edgeDecision || {
                     is_fake: false,
-                    details: "Sunucu çevrimdışı - Temel Edge koruma devrede",
+                    details: "Sunucu çevrimdışı - Edge koruma devrede",
                     status: "offline"
+                };
+                tabSecurityStatus[tabId] = {
+                    url: request.url,
+                    data: fallback,
+                    timestamp: Date.now()
                 };
                 sendResponse(fallback);
             });

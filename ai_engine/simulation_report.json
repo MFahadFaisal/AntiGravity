@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-10-30 16:32:23",
+  "timestamp": "2026-10-30 16:52:25",
   "stats": {
-    "total": 170,
-    "safe": 116,
-    "blocked": 54,
-    "threat_ratio": 31.76
+    "total": 188,
+    "safe": 127,
+    "blocked": 61,
+    "threat_ratio": 32.45
   },
-  "crypto_digest_sha256": "f1ae53ef0c81423baaedee44ff1fd6bc5459887e15588e2e5ee79c778a6e314e",
+  "crypto_digest_sha256": "8f1e520fbc6ae913a2f80f8e2c565bd9bbb6762dac8ccbd67d10e2e999a18982",
   "results": [
     {
       "id": "THREAT-001",
@@ -18,7 +18,7 @@
       "score": 100,
       "mitre": "T1566.002: Homograph Phishing",
       "reason": "Adli Güvenlik Tespiti: 'xn--pple-43d.com/login/auth.php' Uluslararası Karakter Sahtekarlığı (IDN/Punycode Homograph Saldırısı)!",
-      "latency_ms": 25.13,
+      "latency_ms": 27.59,
       "success": true
     },
     {
@@ -31,7 +31,7 @@
       "score": 100,
       "mitre": "T1056: Input Capture (Credential Harvesting)",
       "reason": "Kimlik Avı Koruması: 'chase-bank-verify-account.pages.dev/l...' Ücretsiz bulut altyapısında yetkisiz şifre toplama formu tespit edildi!",
-      "latency_ms": 16.96,
+      "latency_ms": 17.64,
       "success": true
     },
     {
@@ -44,7 +44,7 @@
       "score": 99,
       "mitre": "T1566.002: Spearphishing Link",
       "reason": "AI Model Tespiti: 'paypal-security-verification-center.x...' Sahte Marka Taklidi (Brand Impersonation / Spoofing)!",
-      "latency_ms": 18.77,
+      "latency_ms": 17.07,
       "success": true
     },
     {
@@ -57,7 +57,7 @@
       "score": 95,
       "mitre": "T1566.002: Machine Learning Phishing Detection",
       "reason": "AI Model Tespiti: 'secure-banking-portal-auth-reset-kyc-...' Sahte/Oltalama URL Yapısı (%95 Risk)!",
-      "latency_ms": 13.61,
+      "latency_ms": 19.71,
       "success": true
     },
     {
@@ -70,7 +70,7 @@
       "score": 95,
       "mitre": "T1566.002: Machine Learning Phishing Detection",
       "reason": "AI Model Tespiti: 'super-casino-slot-bahis-jackpot.com/play' Sahte/Oltalama URL Yapısı (%95 Risk)!",
-      "latency_ms": 14.12,
+      "latency_ms": 16.87,
       "success": true
     },
     {
@@ -83,7 +83,7 @@
       "score": 0,
       "mitre": "None",
       "reason": "Sistem Dokunulmaz Servisi: Güvenli Altyapı",
-      "latency_ms": 5.77,
+      "latency_ms": 4.4,
       "success": true
     },
     {
@@ -96,7 +96,7 @@
       "score": 0,
       "mitre": "None",
       "reason": "Sistem Dokunulmaz Servisi: Güvenli Altyapı",
-      "latency_ms": 6.09,
+      "latency_ms": 5.68,
       "success": true
     }
   ]

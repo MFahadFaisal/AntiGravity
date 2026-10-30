@@ -252,3 +252,25 @@ def test_threat_intel_stats_endpoint():
     assert res.status_code == 200
     data = res.json()
     assert "total_indicators" in data
+
+def test_dns_sinkhole_api_endpoints():
+    """Verify DNS Sinkhole API routes and stats."""
+    res = client.get("/api/dns/stats")
+    assert res.status_code == 200
+    data = res.json()
+    assert "total_queries" in data
+    assert "status" in data
+
+    q_res = client.get("/api/dns/queries")
+    assert q_res.status_code == 200
+    assert "queries" in q_res.json()
+
+def test_model_export_endpoints():
+    """Verify client weights and ONNX model download endpoints."""
+    weights_res = client.get("/api/model/weights")
+    assert weights_res.status_code == 200
+    assert "application/json" in weights_res.headers.get("content-type", "")
+
+    onnx_res = client.get("/api/model/onnx")
+    assert onnx_res.status_code == 200
+    assert len(onnx_res.content) > 100_000

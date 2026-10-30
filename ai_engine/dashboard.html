@@ -490,6 +490,9 @@
             <button class="nav-btn" role="tab" aria-selected="false" onclick="switchTab('blackTab', this)">
                 <span data-i18n="navBlack">🚨 Threat Ledger</span><span class="nav-count" id="navBlack">0</span>
             </button>
+            <button class="nav-btn" role="tab" aria-selected="false" onclick="switchTab('dnsTab', this)">
+                <span data-i18n="navDns">🌐 DNS Sinkhole Gateway</span><span class="nav-count" id="navDns">0</span>
+            </button>
         </nav>
 
         <div class="side-controls">
@@ -569,7 +572,7 @@
                 <div class="radar-hud">
                     <div>SCANNER: 3D_VECTOR_ACTIVE</div>
                     <div id="hudBeacons">BEACONS: 0 THREATS</div>
-                    <div id="hudEngine">AI_ENGINE: 22_FEATURES</div>
+                    <div id="hudEngine">AI_ENGINE: 32_FEATURES (ONNX)</div>
                 </div>
             </div>
         </div>
@@ -702,6 +705,64 @@
             </div>
         </section>
 
+        <!-- TAB 4: DNS SINKHOLE & GATEWAY -->
+        <section id="dnsTab" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h2 class="panel-title" style="font-size: 18px; margin-bottom: 6px; color: #06b6d4;" data-i18n="dnsTitle">🌐 DNS Sinkhole Gateway & Real-Time Threat Interception</h2>
+                    <p style="font-size: 13px; color: var(--text-muted);" data-i18n="dnsSub">RFC 1035 UDP gateway evaluating domain lookups against 25k+ threat feeds and 32-feature AI models.</p>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span id="dnsStatusBadge" style="padding:4px 10px; border-radius:20px; font-family:var(--mono); font-size:11px; font-weight:700; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid #10b981;">RUNNING :5300</span>
+                    <button class="btn" id="btnToggleDns" onclick="toggleDnsGateway()" style="border-color:#06b6d4; color:#06b6d4;">
+                        <span data-i18n="btnToggleDns">Toggle DNS Gateway</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats" style="margin-bottom:20px;">
+                <div class="card total">
+                    <div class="card-label" data-i18n="dnsTotal">TOTAL DNS QUERIES</div>
+                    <h3 id="dns-total-count">0</h3>
+                    <div class="ratio"><span>UDP port 5300</span></div>
+                </div>
+                <div class="card blocked">
+                    <div class="card-label" data-i18n="dnsBlocked">SINKHOLED DOMAINS</div>
+                    <h3 id="dns-blocked-count">0</h3>
+                    <div class="ratio"><span>0.0.0.0 quarantined</span></div>
+                </div>
+                <div class="card safe">
+                    <div class="card-label" data-i18n="dnsBenign">BENIGN RESOLUTIONS</div>
+                    <h3 id="dns-benign-count">0</h3>
+                    <div class="ratio"><span>Forwarded 1.1.1.1</span></div>
+                </div>
+                <div class="card threat-rate">
+                    <div class="card-label" data-i18n="dnsCache">CACHE HIT POOL</div>
+                    <h3 id="dns-cache-count">0</h3>
+                    <div class="ratio"><span>Sub-ms lookups</span></div>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-i18n="thTime">TIMESTAMP</th>
+                            <th>CLIENT IP</th>
+                            <th>REQUESTED DOMAIN</th>
+                            <th>TYPE</th>
+                            <th>VERDICT</th>
+                            <th>REASON & DEFENSE VECTOR</th>
+                            <th>LATENCY</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dns-table-body">
+                        <tr><td colspan="7" class="empty-row">Listening for incoming DNS queries on UDP :5300...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <p style="margin-top: 30px; font-size: 11.5px; color: var(--text-muted); font-family: var(--mono);" data-i18n="footnote">
             SECURE LOCAL LOGGING: All telemetry is preserved strictly on 127.0.0.1. URLs are automatically defanged for analyst safety.
         </p>
@@ -816,6 +877,14 @@
             navLogs: "📊 Live Incident Stream",
             navWhite: "✅ Verified Whitelist",
             navBlack: "🚨 Threat Ledger",
+            navDns: "🌐 DNS Sinkhole Gateway",
+            dnsTitle: "🌐 DNS Sinkhole Gateway & Real-Time Threat Interception",
+            dnsSub: "RFC 1035 UDP gateway evaluating domain lookups against 25k+ threat feeds and 32-feature AI models.",
+            dnsTotal: "TOTAL DNS QUERIES",
+            dnsBlocked: "SINKHOLED DOMAINS",
+            dnsBenign: "BENIGN RESOLUTIONS",
+            dnsCache: "CACHE HIT POOL",
+            btnToggleDns: "Toggle DNS Gateway",
             pauseStream: "Pause Stream",
             resumeStream: "Resume Stream",
             socKicker: "CYBER DEFENSE OPERATIONS CENTER",
@@ -895,6 +964,14 @@
             navLogs: "📊 Canlı Olay Akışı",
             navWhite: "✅ Doğrulanmış Beyaz Liste",
             navBlack: "🚨 Tehdit Kütüğü",
+            navDns: "🌐 DNS Ağ Geçidi & Sinkhole",
+            dnsTitle: "🌐 DNS Ağ Geçidi & Gerçek Zamanlı Tehdit Engelleme",
+            dnsSub: "Tüm alan adı sorgularını 25b+ tehdit istihbaratı ve 32-boyutlu yapay zeka ile denetleyen ağ geçidi.",
+            dnsTotal: "TOPLAM DNS SORGUSU",
+            dnsBlocked: "ENGELLENEN TEHDİTLER",
+            dnsBenign: "TEMİZ ÇÖZÜMLEMELER",
+            dnsCache: "ÖNBELLEK KAYITLARI",
+            btnToggleDns: "DNS Ağ Geçidini Aç/Kapat",
             pauseStream: "Akışı Duraklat",
             resumeStream: "Akışı Sürdür",
             socKicker: "ADLİ BİLİŞİM & SİBER SAVUNMA MERKEZİ",
@@ -1395,6 +1472,70 @@
         btn.classList.add('active');
         btn.setAttribute('aria-selected', 'true');
         if (tabId === 'whiteTab') fetchWhitelist();
+        if (tabId === 'dnsTab') fetchDnsData();
+    }
+
+    /* ==============================================================
+       DNS SINKHOLE & GATEWAY LOGIC
+       ============================================================== */
+    async function fetchDnsData() {
+        try {
+            const statsRes = await fetch('/api/dns/stats');
+            const statsData = await statsRes.json();
+            if (statsData) {
+                $('dns-total-count').textContent = (statsData.total_queries || 0).toLocaleString();
+                $('dns-blocked-count').textContent = (statsData.blocked_queries || 0).toLocaleString();
+                $('dns-benign-count').textContent = (statsData.benign_queries || 0).toLocaleString();
+                $('dns-cache-count').textContent = (statsData.cached_domains || 0).toLocaleString();
+                const navBadge = $('navDns');
+                if (navBadge) navBadge.textContent = statsData.blocked_queries || 0;
+                const isRunning = statsData.status === 'RUNNING';
+                const badge = $('dnsStatusBadge');
+                if (badge) {
+                    badge.textContent = isRunning ? `RUNNING :${statsData.port}` : 'STOPPED';
+                    badge.style.color = isRunning ? '#10b981' : '#f59e0b';
+                    badge.style.borderColor = isRunning ? '#10b981' : '#f59e0b';
+                    badge.style.background = isRunning ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)';
+                }
+            }
+
+            const queriesRes = await fetch('/api/dns/queries');
+            const queriesData = await queriesRes.json();
+            const tbody = $('dns-table-body');
+            if (tbody && queriesData && queriesData.queries) {
+                const list = queriesData.queries;
+                if (list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-row">Listening for incoming DNS queries on UDP :5300...</td></tr>';
+                } else {
+                    tbody.innerHTML = list.slice().reverse().map(q => {
+                        const isBlk = q.verdict === 'BLOCKED';
+                        const badgeClass = isBlk ? 'badge-block' : 'badge-safe';
+                        return `<tr>
+                            <td style="font-family:var(--mono); font-size:12px;">${q.timestamp}</td>
+                            <td style="font-family:var(--mono); color:var(--text-sub);">${q.client_ip}</td>
+                            <td style="font-family:var(--mono); font-weight:600; color:${isBlk ? '#ef4444' : '#10b981'};">${q.domain}</td>
+                            <td><span style="font-family:var(--mono); font-size:11px; padding:2px 6px; background:rgba(255,255,255,0.05); border-radius:4px;">${q.qtype}</span></td>
+                            <td><span class="badge ${badgeClass}">${q.verdict}</span></td>
+                            <td style="font-size:12px; color:var(--text-sub);">${q.reason}</td>
+                            <td style="font-family:var(--mono); font-size:12px; color:var(--gold);">${q.latency_ms} ms</td>
+                        </tr>`;
+                    }).join('');
+                }
+            }
+        } catch(e) {
+            console.debug("DNS fetch error:", e);
+        }
+    }
+
+    async function toggleDnsGateway() {
+        try {
+            const res = await fetch('/api/dns/toggle', { method: 'POST' });
+            const data = await res.json();
+            toast("DNS Gateway: " + (data.action === "started" ? "Started" : "Stopped"));
+            fetchDnsData();
+        } catch(e) {
+            console.error("DNS toggle error:", e);
+        }
     }
 
     /* ==============================================================
@@ -1841,6 +1982,8 @@
         fetchLogs();
         initWebSocket();
         fetchWhitelist();
+        fetchDnsData();
+        setInterval(fetchDnsData, 4000);
 
         document.getElementById("audioIcon").textContent = AUDIO_ENABLED ? "🔊" : "🔇";
         document.getElementById("audioText").textContent = AUDIO_ENABLED ? "Audio: ON" : "Audio: MUTED";

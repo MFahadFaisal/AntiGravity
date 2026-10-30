@@ -31,6 +31,7 @@ from visual_detector import check_visual_spoofing
 from threat_feed_manager import is_known_threat, sync_all_feeds, load_threat_cache_from_db, get_feed_statistics
 from siem_exporter import dispatch_siem_event, format_cef_event
 from takedown_generator import generate_takedown_notice
+from dns_sinkhole import DNSSinkholeServer
 
 app = FastAPI(title="AntiGravity SOC - Real-Time Zero-Trust AI Engine", version="2.0.0")
 
@@ -149,6 +150,14 @@ init_db()
 # Initialize high-speed threat intelligence cache
 threat_cache_count = load_threat_cache_from_db(DB_FILE)
 print(f"[✓] Tehdit İstihbarat Havuzu: {threat_cache_count} aktif gösterge önbelleğe yüklendi.")
+
+# Initialize RFC 1035 UDP DNS Sinkhole Daemon
+dns_sinkhole = DNSSinkholeServer(bind_port=5300, upstream_dns="1.1.1.1", sinkhole_ip="0.0.0.0")
+try:
+    if dns_sinkhole.start():
+        print("[✓] AntiGravity DNS Sinkhole Gateway aktif: UDP :5300 (Upstream: 1.1.1.1)")
+except Exception as _dns_e:
+    print(f"[!] DNS Sinkhole başlatılamadı: {_dns_e}")
 
 def get_setting(key: str, default: str = "") -> str:
     try:
@@ -1046,7 +1055,51 @@ def takedown_notice_endpoint(log_id: int):
     return notice
 
 # ------------------------------------------------------------------
-# 11. DASHBOARD ARAYÜZÜ
+# 11. DNS SINKHOLE & ENTERPRISE GATEWAY YÖNETİMİ
+# ------------------------------------------------------------------
+@app.get("/api/dns/stats")
+def get_dns_stats():
+    return dns_sinkhole.get_stats()
+
+@app.post("/api/dns/toggle")
+def toggle_dns_sinkhole():
+    stats = dns_sinkhole.get_stats()
+    if stats["status"] == "RUNNING":
+        dns_sinkhole.stop()
+        return {"status": "success", "action": "stopped", "dns_status": "STOPPED"}
+    else:
+        success = dns_sinkhole.start()
+        return {
+            "status": "success" if success else "error",
+            "action": "started" if success else "failed",
+            "dns_status": dns_sinkhole.get_stats()["status"]
+        }
+
+@app.get("/api/dns/queries")
+def get_dns_queries():
+    return {"queries": dns_sinkhole.get_recent_queries()}
+
+@app.get("/api/model/weights")
+def get_model_weights():
+    weights_path = os.path.join(BASE_DIR, "antigravity_model_weights.json")
+    if os.path.exists(weights_path):
+        return FileResponse(weights_path, media_type="application/json")
+    return JSONResponse(status_code=404, content={"message": "Model weights bulunamadı."})
+
+@app.get("/api/model/onnx")
+def download_onnx_model():
+    onnx_path = os.path.join(BASE_DIR, "antigravity_url_model.onnx")
+    if os.path.exists(onnx_path):
+        return FileResponse(onnx_path, media_type="application/octet-stream", filename="antigravity_url_model.onnx")
+    return JSONResponse(status_code=404, content={"message": "ONNX model dosyası bulunamadı."})
+
+@app.on_event("shutdown")
+def on_shutdown():
+    if dns_sinkhole:
+        dns_sinkhole.stop()
+
+# ------------------------------------------------------------------
+# 12. DASHBOARD ARAYÜZÜ
 # ------------------------------------------------------------------
 @app.get("/")
 @app.get("/dashboard")

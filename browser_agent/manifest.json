@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AntiGravity Agent",
-  "version": "2.1",
-  "description": "Zero-Trust Real-Time Phishing, Visual Impersonation & Web Threat Defense Agent.",
+  "version": "2.5",
+  "description": "Zero-Trust Real-Time Phishing, Visual Impersonation & Web Threat Defense Agent with Offline 32-Feature AI Engine.",
   "icons": {
     "16": "icon16.png",
     "32": "icon32.png",
@@ -38,6 +38,12 @@
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["antigravity_client_engine.js", "antigravity_model_weights.json", "icon128.png"],
+      "matches": ["<all_urls>"]
     }
   ]
 }

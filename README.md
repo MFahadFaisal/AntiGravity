@@ -1,14 +1,16 @@
-# 🛡️ AntiGravity v2.1: Enterprise Zero-Trust AI Web Defense & SOC Platform
+# 🛡️ AntiGravity v2.5: Enterprise Zero-Trust AI Web Defense & SOC Platform
 
 [![CI/CD Pipeline](https://github.com/MFahadFaisal/AntiGravity/actions/workflows/ci.yml/badge.svg)](https://github.com/MFahadFaisal/AntiGravity/actions/workflows/ci.yml)
+[![Threat Feed Sync](https://github.com/MFahadFaisal/AntiGravity/actions/workflows/threat-feed-sync.yml/badge.svg)](https://github.com/MFahadFaisal/AntiGravity/actions/workflows/threat-feed-sync.yml)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.14-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![ONNX](https://img.shields.io/badge/ONNX-Ready-005CED?style=for-the-badge&logo=onnx&logoColor=white)](https://onnx.ai/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Chrome Extension](https://img.shields.io/badge/Chrome_Extension-MV3-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://developer.chrome.com/docs/extensions/)
-[![Tests](https://img.shields.io/badge/Pytest-20%2F20%20Passing-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](https://docs.pytest.org/)
+[![Tests](https://img.shields.io/badge/Pytest-30%2F30%20Passing-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](https://docs.pytest.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**AntiGravity** is an enterprise-grade, real-time **Zero-Trust Web Threat Defense, Computer Vision Phishing Detection, and Digital Forensics** platform. It pairs an active **Google Chrome Manifest V3 Browser Agent** (featuring an interactive popup, Shadow DOM blocking overlay, and synchronized options console) with a high-throughput **FastAPI Machine Learning Core**, a **64-bit Perceptual Hashing Computer Vision Engine**, and an integrated **SOC (Security Operations Center)** console featuring a **3D Cyber Threat Radar Hemisphere**, **WebSocket live streaming**, and **Automated Multi-Channel Webhook Alerting** (Discord, Slack, Telegram).
+**AntiGravity** is an enterprise-grade, real-time **Zero-Trust Web Threat Defense, Computer Vision Phishing Detection, and Digital Forensics** platform. It pairs an active **Google Chrome Manifest V3 Browser Agent** (featuring an interactive popup, Shadow DOM blocking overlay, sub-millisecond offline ML inference, and synchronized options console) with a high-throughput **FastAPI Machine Learning Core**, an **RFC 1035 UDP DNS Sinkhole Gateway**, a **64-bit Perceptual Hashing Computer Vision Engine**, and an integrated **SOC (Security Operations Center)** console featuring a **3D Cyber Threat Radar Hemisphere**, **WebSocket live streaming**, and **Automated Multi-Channel Webhook Alerting** (Discord, Slack, Telegram).
 
 ---
 
@@ -307,6 +309,11 @@ The SOC console will be live at `http://127.0.0.1:8001/dashboard`.
 | `/api/threat-intel/stats` | `GET` | Summarizes indicators across URLhaus, OpenPhish, and PhishTank |
 | `/api/threat-intel/sync` | `POST` | Triggers background synchronization of live public threat feeds |
 | `/api/takedown-notice/{id}` | `GET` | Generates an ICANN-compliant domain takedown notice for registrars |
+| `/api/dns/stats` | `GET` | Live telemetry for RFC 1035 UDP DNS Sinkhole Gateway (queries, blocked, cached) |
+| `/api/dns/toggle` | `POST` | Toggles UDP DNS Sinkhole Gateway service state (start / stop) |
+| `/api/dns/queries` | `GET` | Ingests real-time DNS resolution stream for SOC console |
+| `/api/model/weights` | `GET` | Serves quantized JSON decision tree weights for client-side evaluation |
+| `/api/model/onnx` | `GET` | Downloads production `antigravity_url_model.onnx` binary |
 | `/api/whitelist` | `GET` | Lists all operator whitelisted domains |
 | `/api/whitelist/add` | `POST` | Adds a domain to bypass all heuristic and AI checks |
 | `/api/whitelist/remove` | `POST` | Removes a domain from the whitelist |

@@ -1,0 +1,67 @@
+name: Threat Intel Feed Sync & Model Parity
+
+on:
+  schedule:
+    # Runs every day at 03:00 UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      force_full_sync:
+        description: 'Force complete indicator pull and model export'
+        required: false
+        default: 'true'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-validate:
+    name: Sync Indicators & Verify Zero-Day Parity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install onnx onnxruntime skl2onnx
+
+      - name: Run Threat Feed Synchronization & Validation
+        run: |
+          python ai_engine/threat_sync_cli.py --sync --validate --export-metrics sync_metrics.json
+          python ai_engine/threat_sync_cli.py --status
+
+      - name: Execute Adversarial Threat Simulations
+        run: |
+          python ai_engine/simulate_threat_scenarios.py
+
+      - name: Re-export ONNX & Manifest V3 Client Engine
+        run: |
+          python ai_engine/export_client_model.py
+
+      - name: Run Full Test Suite
+        run: |
+          pytest -v tests/
+
+      - name: Commit & Push Updated Intel & Client Engine
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action [Threat-Sync]"
+          git add ai_engine/antigravity_logs.db ai_engine/antigravity_url_model.onnx ai_engine/antigravity_model_weights.json browser_agent/antigravity_client_engine.js browser_agent/antigravity_model_weights.json || true
+          if git diff --staged --quiet; then
+            echo "No new indicators or weight changes detected."
+          else
+            git commit -m "chore(threat-intel): automated nightly feed sync & ONNX parity [skip ci]"
+            git push origin main
+          fi

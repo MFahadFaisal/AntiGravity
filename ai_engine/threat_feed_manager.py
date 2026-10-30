@@ -215,3 +215,33 @@ def get_feed_statistics(db_path: str) -> dict:
         }
     except Exception as e:
         return {"total_indicators": 0, "error": str(e)}
+
+class ThreatFeedManager:
+    """Enterprise wrapper class for threat intelligence synchronization and lookup."""
+
+    def __init__(self, db_path: str = None):
+        self.db_path = db_path or os.path.join(os.path.dirname(__file__), "antigravity_logs.db")
+        if not THREAT_DOMAINS_SET:
+            load_threat_cache_from_db(self.db_path)
+
+    @property
+    def indicators(self) -> set:
+        return THREAT_DOMAINS_SET
+
+    def check_url(self, url: str) -> dict:
+        """Checks if URL or hostname exists in verified threat feeds."""
+        domain = normalize_domain(url)
+        res = is_known_threat(domain)
+        return {
+            "is_blacklisted": res.get("is_threat", False),
+            "source": res.get("source", ""),
+            "domain": domain
+        }
+
+    def sync_all_feeds(self, max_per_feed: int = 1500) -> dict:
+        """Synchronizes all configured public feeds into SQLite database."""
+        return sync_all_feeds(self.db_path, max_per_feed=max_per_feed)
+
+    def get_stats(self) -> dict:
+        """Returns database indicator metrics."""
+        return get_feed_statistics(self.db_path)
