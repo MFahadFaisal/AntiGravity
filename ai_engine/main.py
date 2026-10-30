@@ -28,6 +28,9 @@ from feature_extractor import (
     FEATURE_NAMES
 )
 from visual_detector import check_visual_spoofing
+from threat_feed_manager import is_known_threat, sync_all_feeds, load_threat_cache_from_db, get_feed_statistics
+from siem_exporter import dispatch_siem_event, format_cef_event
+from takedown_generator import generate_takedown_notice
 
 app = FastAPI(title="AntiGravity SOC - Real-Time Zero-Trust AI Engine", version="2.0.0")
 
@@ -143,6 +146,10 @@ def init_db():
 
 init_db()
 
+# Initialize high-speed threat intelligence cache
+threat_cache_count = load_threat_cache_from_db(DB_FILE)
+print(f"[✓] Tehdit İstihbarat Havuzu: {threat_cache_count} aktif gösterge önbelleğe yüklendi.")
+
 def get_setting(key: str, default: str = "") -> str:
     try:
         with db() as conn:
@@ -233,6 +240,12 @@ class WebhookSettings(BaseModel):
     slack_webhook_url: str = ""
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
+
+class SiemSettings(BaseModel):
+    siem_syslog_host: str = ""
+    siem_syslog_port: str = "514"
+    siem_syslog_proto: str = "UDP"
+    siem_enabled: bool = True
 
 async def dispatch_webhook_alerts(log_entry: dict):
     """Dispatches real-time incident alerts to Discord, Slack, and Telegram."""
@@ -383,6 +396,13 @@ def check_local_threat_intel(domain: str):
     if is_system_safe(clean_domain):
         return {"is_scam": False}
 
+    # 1. High-speed in-memory threat intelligence lookup (URLhaus, OpenPhish, PhishTank)
+    mem_threat = is_known_threat(clean_domain)
+    if mem_threat.get("is_threat"):
+        source = mem_threat.get("source", "Threat Feed")
+        return {"is_scam": True, "details": f"Tehdit İstihbaratı ({source}): Teyitli zararlı / oltalama yayını!"}
+
+    # 2. SQLite local database fallback
     with db() as conn:
         row = conn.execute("SELECT source FROM threat_intel WHERE domain = ?", (clean_domain,)).fetchone()
     if row:
@@ -689,6 +709,12 @@ async def gatekeeper_decision(data: TrafficData):
     if blocked or url_score >= 85:
         asyncio.create_task(dispatch_webhook_alerts(log_entry))
 
+    # Stream standard CEF ArcSight / Syslog event to local SIEM file & remote receivers
+    siem_host = get_setting("siem_syslog_host", "")
+    siem_port = int(get_setting("siem_syslog_port", "514") or "514")
+    siem_proto = get_setting("siem_syslog_proto", "UDP")
+    asyncio.create_task(dispatch_siem_event(log_entry, siem_host, siem_port, siem_proto))
+
     return {
         "is_fake": blocked,
         "is_hard_block": blocked and is_hard_block,
@@ -958,7 +984,69 @@ async def test_webhook():
     return {"status": "success", "message": "Test bildirimi kayıtlı tüm webhook kanallarına iletildi."}
 
 # ------------------------------------------------------------------
-# 8. DASHBOARD ARAYÜZÜ
+# 8. ENTERPRISE SIEM & SYSLOG CEF YAPILANDIRMASI
+# ------------------------------------------------------------------
+@app.get("/api/settings/siem")
+def get_siem_settings():
+    return {
+        "siem_syslog_host": get_setting("siem_syslog_host"),
+        "siem_syslog_port": get_setting("siem_syslog_port", "514"),
+        "siem_syslog_proto": get_setting("siem_syslog_proto", "UDP"),
+        "siem_enabled": get_setting("siem_enabled", "true") == "true"
+    }
+
+@app.post("/api/settings/siem")
+def save_siem_settings(settings: SiemSettings):
+    set_setting("siem_syslog_host", settings.siem_syslog_host.strip())
+    set_setting("siem_syslog_port", str(settings.siem_syslog_port).strip())
+    set_setting("siem_syslog_proto", settings.siem_syslog_proto.strip())
+    set_setting("siem_enabled", "true" if settings.siem_enabled else "false")
+    return {"status": "success", "message": "SIEM Syslog yapılandırması başarıyla kaydedildi."}
+
+@app.post("/api/test-siem")
+async def test_siem():
+    test_entry = {
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "url": "https://siem-probe.antigravity.corp/security-check",
+        "domain": "siem-probe.antigravity.corp",
+        "action": "BLOCK",
+        "reason": "SIEM ArcSight / CEF Entegrasyon Doğrulama Olayı",
+        "detector": "AntiGravity SIEM Probe (v2.1)",
+        "url_score": 99,
+        "mitre_tag": "T1566.002"
+    }
+    host = get_setting("siem_syslog_host", "")
+    port = int(get_setting("siem_syslog_port", "514") or "514")
+    proto = get_setting("siem_syslog_proto", "UDP")
+    await dispatch_siem_event(test_entry, host, port, proto)
+    return {"status": "success", "message": "Test CEF olayı yerel SIEM günlüğüne kaydedildi ve hedefe iletildi."}
+
+# ------------------------------------------------------------------
+# 9. TEHDİT İSTİHBARATI & SÜREKLİ YAYIN YÖNETİMİ
+# ------------------------------------------------------------------
+@app.get("/api/threat-intel/stats")
+def threat_intel_stats():
+    return get_feed_statistics(DB_FILE)
+
+@app.post("/api/threat-intel/sync")
+def threat_intel_sync():
+    res = sync_all_feeds(DB_FILE)
+    return {"status": "success", "sync_summary": res}
+
+# ------------------------------------------------------------------
+# 10. OTOMATİK ALAN ADI KAPATMA (TAKEDOWN) BİLDİRİMİ
+# ------------------------------------------------------------------
+@app.get("/api/takedown-notice/{log_id}")
+def takedown_notice_endpoint(log_id: int):
+    with db() as conn:
+        row = conn.execute(f"SELECT {LOG_COLUMNS} FROM logs WHERE id = ?", (log_id,)).fetchone()
+    if not row:
+        return JSONResponse(status_code=404, content={"status": "error", "message": "Olay kaydı bulunamadı."})
+    notice = generate_takedown_notice(dict(row))
+    return notice
+
+# ------------------------------------------------------------------
+# 11. DASHBOARD ARAYÜZÜ
 # ------------------------------------------------------------------
 @app.get("/")
 @app.get("/dashboard")

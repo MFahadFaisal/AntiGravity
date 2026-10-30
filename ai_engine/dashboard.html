@@ -719,6 +719,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 10px; flex-wrap: wrap;">
             <div style="display: flex; gap: 8px;">
                 <button id="whitelistBtn" class="btn" style="border-color: var(--gold); color: var(--gold);">✨ Add to Whitelist</button>
+                <button id="takedownBtn" class="btn" style="border-color: var(--danger); color: var(--danger); display:none;">📋 Copy Takedown Notice</button>
                 <a id="downloadBtn" href="#" target="_blank" class="btn btn-primary" style="display:none;">📥 Download HTML Evidence</a>
             </div>
             <button class="btn btn-secondary" onclick="closeModal()" data-i18n="btnClose">Close</button>
@@ -769,12 +770,32 @@
                     <input type="text" id="cfgTgChat" placeholder="-100123456789" class="input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--line); border-radius: 6px; color: #fff; font-family: var(--mono); font-size: 12px;">
                 </div>
             </div>
+
+            <!-- Enterprise SIEM Syslog Config -->
+            <div style="border-top: 1px solid var(--line); padding-top: 14px; margin-top: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                    <span>🛡️ Enterprise SIEM Syslog (ArcSight CEF / Splunk Forwarder)</span>
+                </label>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
+                    <input type="text" id="cfgSiemHost" placeholder="siem.corp.internal (or IP)" class="input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--line); border-radius: 6px; color: #fff; font-family: var(--mono); font-size: 12px;">
+                    <input type="text" id="cfgSiemPort" placeholder="514" class="input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--line); border-radius: 6px; color: #fff; font-family: var(--mono); font-size: 12px;">
+                    <select id="cfgSiemProto" style="padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--line); border-radius: 6px; color: #fff; font-family: var(--mono); font-size: 12px;">
+                        <option value="UDP">UDP</option>
+                        <option value="TCP">TCP</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; gap: 10px;">
-            <button class="btn" onclick="testWebhookPing()" style="border-color: #06b6d4; color: #06b6d4;">
-                ⚡ <span data-i18n="btnTestPing">Send Test Alert</span>
-            </button>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn" onclick="testWebhookPing()" style="border-color: #06b6d4; color: #06b6d4;">
+                    ⚡ <span data-i18n="btnTestPing">Test Webhooks</span>
+                </button>
+                <button class="btn" onclick="testSiemPing()" style="border-color: #10b981; color: #10b981;">
+                    ⚡ <span>Test SIEM</span>
+                </button>
+            </div>
             <div style="display: flex; gap: 8px;">
                 <button class="btn btn-secondary" onclick="closeWebhookModal()" data-i18n="btnClose">Cancel</button>
                 <button class="btn btn-primary" onclick="saveWebhookSettings()">💾 <span data-i18n="btnSaveWebhooks">Save Configuration</span></button>
@@ -1609,6 +1630,14 @@
             `;
 
             $('whitelistBtn').onclick = () => addWhitelist(log.domain);
+            const tdBtn = $('takedownBtn');
+            if (getActionStatus(log) === 'blocked') {
+                tdBtn.style.display = 'inline-flex';
+                tdBtn.onclick = () => copyTakedownNotice(log.id);
+            } else {
+                tdBtn.style.display = 'none';
+            }
+
             const dlBtn = $('downloadBtn');
             if (log.has_evidence) {
                 dlBtn.style.display = 'inline-flex';
@@ -1621,6 +1650,19 @@
         } catch(e) {}
     }
     function closeModal() { $('detailModal').classList.remove('open'); }
+
+    /* Official Takedown Notice Generator */
+    async function copyTakedownNotice(logId) {
+        try {
+            const res = await fetch(`${API}/api/takedown-notice/${logId}`);
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            await navigator.clipboard.writeText(data.plain_text);
+            toast(CURRENT_LANG === 'tr' ? "✓ Resmi Takedown bildirimi panoya kopyalandı." : "✓ Official Abuse Takedown notice copied to clipboard.");
+        } catch(e) {
+            toast("Failed to generate takedown notice.");
+        }
+    }
 
     /* Whitelist API */
     async function fetchWhitelist() {
@@ -1697,7 +1739,7 @@
         fetchLogs();
     }
 
-    /* Webhook Alerts Management */
+    /* Webhook & SIEM Alerts Management */
     async function openWebhookModal() {
         try {
             const res = await fetch(`${API}/api/settings/webhooks`);
@@ -1707,6 +1749,14 @@
                 $('cfgSlack').value = data.slack_webhook_url || '';
                 $('cfgTgToken').value = data.telegram_bot_token || '';
                 $('cfgTgChat').value = data.telegram_chat_id || '';
+            }
+
+            const siemRes = await fetch(`${API}/api/settings/siem`);
+            if (siemRes.ok) {
+                const sData = await siemRes.json();
+                $('cfgSiemHost').value = sData.siem_syslog_host || '';
+                $('cfgSiemPort').value = sData.siem_syslog_port || '514';
+                $('cfgSiemProto').value = sData.siem_syslog_proto || 'UDP';
             }
         } catch(e) {}
         $('webhookModal').classList.add('open');
@@ -1723,18 +1773,30 @@
             telegram_bot_token: $('cfgTgToken').value.trim(),
             telegram_chat_id: $('cfgTgChat').value.trim()
         };
+        const siemPayload = {
+            siem_syslog_host: $('cfgSiemHost').value.trim(),
+            siem_syslog_port: $('cfgSiemPort').value.trim() || '514',
+            siem_syslog_proto: $('cfgSiemProto').value,
+            siem_enabled: Boolean($('cfgSiemHost').value.trim())
+        };
+
         try {
-            const res = await fetch(`${API}/api/settings/webhooks`, {
+            await fetch(`${API}/api/settings/webhooks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (res.ok) {
-                toast(I18N[CURRENT_LANG].toastWebhookSaved || "Webhook configuration saved successfully.");
-                closeWebhookModal();
-            }
+
+            await fetch(`${API}/api/settings/siem`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(siemPayload)
+            });
+
+            toast(I18N[CURRENT_LANG].toastWebhookSaved || "Integrations saved successfully.");
+            closeWebhookModal();
         } catch(e) {
-            toast("Failed to save webhook settings.");
+            toast("Failed to save settings.");
         }
     }
 
@@ -1749,6 +1811,20 @@
             }
         } catch(e) {
             toast("Failed to dispatch test webhook.");
+        }
+    }
+
+    async function testSiemPing() {
+        toast("Dispatching test CEF event...");
+        try {
+            const res = await fetch(`${API}/api/test-siem`, { method: 'POST' });
+            if (res.ok) {
+                toast(CURRENT_LANG === 'tr' ? "✓ Test CEF olayı yerel SIEM günlüğüne işlendi." : "✓ Test CEF event dispatched to SIEM log.");
+            } else {
+                toast("SIEM test dispatch failed.");
+            }
+        } catch(e) {
+            toast("Failed to dispatch SIEM test.");
         }
     }
 

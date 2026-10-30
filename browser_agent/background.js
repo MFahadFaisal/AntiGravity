@@ -1,6 +1,12 @@
 const tabSecurityStatus = {};
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8001";
 
+const FREE_HOSTING_SUFFIXES = [
+    "pages.dev", "firebaseapp.com", "vercel.app", "netlify.app",
+    "ngrok.io", "ngrok-free.app", "github.io", "glitch.me", "000webhostapp.com",
+    "wixsite.com", "weebly.com", "render.com", "railway.app", "fly.dev"
+];
+
 function getServerUrl() {
     return new Promise((resolve) => {
         if (chrome.storage && chrome.storage.sync) {
@@ -13,10 +19,83 @@ function getServerUrl() {
     });
 }
 
+function evaluateEdgeZeroTrust(request) {
+    try {
+        const u = new URL(request.url);
+        const host = u.hostname.toLowerCase();
+
+        // 1. IDN Homograph / Punycode Trap
+        if (host.includes("xn--")) {
+            return {
+                is_fake: true,
+                is_hard_block: true,
+                block: true,
+                is_blocked: true,
+                action: "BLOCK",
+                status: "block",
+                url_score: 100,
+                details: `Edge Zero-Trust Koruması: '${host}' Uluslararası Karakter Sahtekarlığı (IDN/Punycode Homograph Saldırısı)!`,
+                reason: `Edge Zero-Trust: '${host}' IDN Homograph Phishing`,
+                mitre_tag: "T1566.002: Homograph Phishing"
+            };
+        }
+
+        // 2. Cloud Host Credential Harvesting Trap
+        if (request.has_password_field || request.has_credit_card_field) {
+            const isFreeHost = FREE_HOSTING_SUFFIXES.some(suffix => host === suffix || host.endsWith("." + suffix));
+            if (isFreeHost) {
+                return {
+                    is_fake: true,
+                    is_hard_block: true,
+                    block: true,
+                    is_blocked: true,
+                    action: "BLOCK",
+                    status: "block",
+                    url_score: 100,
+                    details: `Edge Zero-Trust Koruması: '${host}' Ücretsiz bulut altyapısında yetkisiz şifre toplama formu engellendi!`,
+                    reason: `Edge Zero-Trust: '${host}' Credential Harvesting on Cloud`,
+                    mitre_tag: "T1056: Input Capture"
+                };
+            }
+        }
+
+        // 3. Raw IP Host with Password Trap
+        if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) && (request.has_password_field || request.has_credit_card_field)) {
+            return {
+                is_fake: true,
+                is_hard_block: true,
+                block: true,
+                is_blocked: true,
+                action: "BLOCK",
+                status: "block",
+                url_score: 100,
+                details: `Edge Zero-Trust Koruması: Doğrudan IP adresinde (${host}) şifre girişi tespit edildi!`,
+                reason: `Edge Zero-Trust: Direct IP Credential Trap (${host})`,
+                mitre_tag: "T1566.002: Direct IP Threat"
+            };
+        }
+    } catch(e) {}
+    return null;
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // 1. Tehdit / Sayfa Analiz İstemi
     if (request.action === "analyze") {
         const tabId = sender?.tab?.id || "active";
+
+        // Fast-path Edge Zero-Trust evaluation
+        const edgeDecision = evaluateEdgeZeroTrust(request);
+        if (edgeDecision) {
+            tabSecurityStatus[tabId] = {
+                url: request.url,
+                data: edgeDecision,
+                timestamp: Date.now()
+            };
+            sendResponse(edgeDecision);
+            return true;
+        }
+
+        // Full SOC Deep Inspection via Python AI Engine
         getServerUrl().then((serverUrl) => {
             fetch(`${serverUrl}/analyze`, {
                 method: "POST",
@@ -42,8 +121,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse(data);
             })
             .catch(error => {
-                console.error("AntiGravity AI Engine Bağlantı Hatası:", error);
-                sendResponse({ is_fake: false, details: "Sunucuya ulaşılamadı", status: "offline" });
+                console.warn("AntiGravity AI Engine Offline. Edge heuristic active:", error);
+                const fallback = edgeDecision || {
+                    is_fake: false,
+                    details: "Sunucu çevrimdışı - Temel Edge koruma devrede",
+                    status: "offline"
+                };
+                sendResponse(fallback);
             });
         });
 
