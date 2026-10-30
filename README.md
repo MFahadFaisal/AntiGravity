@@ -219,6 +219,7 @@ AntiGravity/
 │
 ├── browser_agent/                     # Chrome Extension (Manifest V3)
 │   ├── manifest.json                  # Extension permissions & entry points (v2.0)
+│   ├── icon16.png, icon32.png...      # High-DPI custom shield branding icons
 │   ├── popup.html                     # Toolbar popup user interface
 │   ├── popup.js                       # Popup controller & status monitor
 │   ├── background.js                  # Service worker & proxy bridge
@@ -228,16 +229,15 @@ AntiGravity/
     ├── main.py                        # FastAPI application & real-time engine
     ├── feature_extractor.py           # 22-Feature engineering module
     ├── train_modern_url_model.py      # Modern training pipeline (PhishTank + Tranco)
+    ├── update_threat_data.py          # Automated threat ingestion & retraining pipeline
     ├── dashboard.html                 # WebSocket-enabled SOC & Forensics console
-    ├── antigravity_url_model.pkl      # Calibrated Random Forest model (98.75% Acc)
+    ├── antigravity_url_model.pkl      # Calibrated Random Forest model (98.65%+ Acc)
     ├── antigravity_logs.db            # SQLite operational database (25k+ threat intel)
     └── datasets/                      # Phishing benchmark datasets
-        ├── modern_phishing_dataset_2026.csv # 24,000-sample modern dataset (NEW)
+        ├── modern_phishing_dataset_2026.csv # 24,400+ sample modern dataset (Primary)
         ├── dataset.csv                # UCI tabular phishing features (Baseline)
         ├── uci-ml-phishing-dataset.csv# UCI dataset mirror
-        ├── Nazario.csv                # Phishing email corpus (Archived)
-        ├── SpamAssasin.csv            # SpamAssassin benchmark corpus (Archived)
-        └── spam.csv                   # SMS/Message spam dataset (Archived)
+        └── legacy_email_archive/      # Archived raw email spam corpora (Nazario, SpamAssassin)
 ```
 
 ---
@@ -333,6 +333,19 @@ Confusion Matrix:
   False Negatives (Missed):   14
   True Positives (Blocked):   2386
 ```
+
+### 🔄 Automated Self-Updating Threat Ingestion Pipeline
+Phishing campaigns frequently rotate domain infrastructure every 48–72 hours. AntiGravity includes a continuous threat ingestion and model refresher script:
+
+```bash
+# Ingest fresh threats from threat intelligence and retrain in seconds
+python3 ai_engine/update_threat_data.py
+
+# Or append newly discovered threats without retraining
+python3 ai_engine/update_threat_data.py --no-retrain
+```
+* **Deduplication:** Automatically queries the database cache and external feeds, deduplicates incoming URLs against `modern_phishing_dataset_2026.csv`.
+* **Zero-Downtime Retraining:** Recalculates the 22 feature vectors and updates `antigravity_url_model.pkl` in-place.
 
 ---
 

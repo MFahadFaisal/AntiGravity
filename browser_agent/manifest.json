@@ -3,6 +3,12 @@
   "name": "AntiGravity Agent",
   "version": "2.0",
   "description": "Zero-Trust Real-Time Phishing and Web Threat Defense Agent.",
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "permissions": [
     "activeTab",
     "tabs",
@@ -15,7 +21,13 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "AntiGravity Security Agent"
+    "default_title": "AntiGravity Security Agent",
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
   },
   "background": {
     "service_worker": "background.js"
