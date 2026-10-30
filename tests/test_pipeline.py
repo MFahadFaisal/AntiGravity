@@ -30,11 +30,11 @@ client = TestClient(app)
 # 1. FEATURE EXTRACTOR TESTS
 # ----------------------------------------------------------------------
 def test_feature_vector_dimension():
-    """Verify feature extractor outputs exactly 22 named features."""
+    """Verify feature extractor outputs exactly 32 named features."""
     url = "https://secure.bank-update.xyz/login.php?session=928374"
     vec = extract_features_vector(url)
-    assert len(vec) == 22, f"Expected 22 features, got {len(vec)}"
-    assert len(FEATURE_NAMES) == 22
+    assert len(vec) == 32, f"Expected 32 features, got {len(vec)}"
+    assert len(FEATURE_NAMES) == 32
 
 def test_feature_dictionary_keys():
     """Verify feature dictionary keys and reasonable values."""
