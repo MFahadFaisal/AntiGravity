@@ -18,6 +18,10 @@
   - [2. Multi-Layered AI Engine & Zero-Day Traps](#2-multi-layered-ai-engine--zero-day-traps)
   - [3. SOC & Digital Forensics Suite with WebSockets](#3-soc--digital-forensics-suite-with-websockets)
 - [Zero-Day Detection Pipeline](#-zero-day-detection-pipeline)
+- [🧬 Dataset Engineering & Evolution](#-dataset-engineering--evolution)
+  - [The Flaws of Legacy Datasets](#the-flaws-of-legacy-datasets)
+  - [The v2.0 Modern Dataset (modern_phishing_dataset_2026.csv)](#the-v20-modern-dataset-modern_phishing_dataset_2026csv)
+  - [Dataset Inventory & Roles](#dataset-inventory--roles)
 - [Feature Engineering (22 Lexical & Structural Metrics)](#-feature-engineering-22-lexical--structural-metrics)
 - [Repository Structure](#-repository-structure)
 - [Quick Start Guide](#-quick-start-guide)
@@ -25,7 +29,7 @@
   - [1. Backend Setup](#1-backend-setup)
   - [2. Chrome Extension Setup](#2-chrome-extension-setup)
 - [API Reference](#-api-reference)
-- [Machine Learning & Model Training (98.31% Accuracy)](#-machine-learning--model-training-9831-accuracy)
+- [Machine Learning Benchmark (98.75% Accuracy)](#-machine-learning-benchmark-9875-accuracy)
 - [Forensic Evidence & Integrity Verification](#-forensic-evidence--integrity-verification)
 - [License](#-license)
 
@@ -68,7 +72,7 @@
 |  [Layer 4: Credential Trap]      -> Blocks password inputs on free cloud hosts (Vercel) |
 |  [Layer 5: Brand Spoofing Trap]  -> Blocks brand names in subdomains on foreign hosts   |
 |  [Layer 6: Threat Intelligence]  -> Active PhishTank database lookup (25,000+ entries)  |
-|  [Layer 7: Machine Learning]     -> 22-Feature Random Forest (98.31% Accuracy, No Pad)  |
+|  [Layer 7: Machine Learning]     -> 22-Feature Random Forest (98.75% Accuracy, No Pad)  |
 |  [Layer 8: OSINT Web Scraper]    -> Live multi-engine reputation check (DDG, Bing)      |
 |  [Layer 9: Evidence Logger]      -> Quarantined HTML capture in SQLite database          |
 +--------------------------------------------+--------------------------------------------+
@@ -154,6 +158,34 @@
 
 ---
 
+## 🧬 Dataset Engineering & Evolution
+
+A critical breakthrough in AntiGravity v2.0 is resolving the **dataset mismatch and staleness problem** found in early academic phishing projects.
+
+### The Flaws of Legacy Datasets
+1. **The 2015 UCI Dataset (`dataset.csv`)**: Contains 30 handcrafted features from 2015. Over 85% of modern phishing campaigns now use valid SSL certificates via Let's Encrypt / Cloudflare, making UCI's reliance on `SSLfinal_State` obsolete.
+2. **The Dummy Padding Flaw**: The original backend only calculated 8 real URL features at runtime and filled the remaining 21 features with hardcoded `-1` dummy values, forcing the model to guess with 70% missing data.
+3. **Email vs Web Mismatch**: Legacy files like `Nazario.csv`, `SpamAssasin.csv`, and `CEAS_08.csv` were raw email text collections, completely unused by real-time web URL classifiers.
+
+### The v2.0 Modern Dataset (`modern_phishing_dataset_2026.csv`)
+AntiGravity v2.0 includes a newly extracted, fully persistent dataset built for reproducible research:
+* **24,000 Real-World Samples:** Balanced 50/50 split between 12,000 verified malicious URLs from active PhishTank feeds and 12,000 legitimate URLs from Tranco/Alexa top web properties.
+* **Zero Dummy Padding:** Every single one of the 22 lexical, structural, and social engineering features is genuinely calculated.
+* **Persisted in CSV:** Located at [ai_engine/datasets/modern_phishing_dataset_2026.csv](file:///Users/fahadfaisal/Downloads/AntiGravity/ai_engine/datasets/modern_phishing_dataset_2026.csv) (2.3 MB) for instant inspection in Excel, Pandas, or Jupyter Notebooks.
+
+### Dataset Inventory & Roles
+
+| File | Type | Sample Count | Status / Role in v2.0 |
+| :--- | :--- | :--- | :--- |
+| `modern_phishing_dataset_2026.csv` | Lexical & Structural URL | **24,000** | **Primary Modern Training Dataset** (22 Features, 0 Padding) |
+| `dataset.csv` | Tabular Academic | 11,055 | Retained as 2015 UCI baseline benchmark |
+| `uci-ml-phishing-dataset.csv` | Tabular Academic | 11,055 | UCI mirror dataset |
+| `Nazario.csv` | Email Phishing Corpus | ~2,500 emails | Archived NLP email corpus |
+| `SpamAssasin.csv` | Email Spam Corpus | ~6,000 emails | Archived NLP email corpus |
+| `spam.csv` | SMS Spam Corpus | ~5,500 messages| Archived NLP text corpus |
+
+---
+
 ## 📊 Feature Engineering (22 Lexical & Structural Metrics)
 
 AntiGravity v2.0 inspects URLs across 22 engineered features computed in $<0.5\text{ms}$ with zero dummy padding:
@@ -197,14 +229,15 @@ AntiGravity/
     ├── feature_extractor.py           # 22-Feature engineering module
     ├── train_modern_url_model.py      # Modern training pipeline (PhishTank + Tranco)
     ├── dashboard.html                 # WebSocket-enabled SOC & Forensics console
-    ├── antigravity_url_model.pkl      # Calibrated Random Forest model (98.31% Acc)
+    ├── antigravity_url_model.pkl      # Calibrated Random Forest model (98.75% Acc)
     ├── antigravity_logs.db            # SQLite operational database (25k+ threat intel)
     └── datasets/                      # Phishing benchmark datasets
-        ├── dataset.csv                # UCI tabular phishing features
+        ├── modern_phishing_dataset_2026.csv # 24,000-sample modern dataset (NEW)
+        ├── dataset.csv                # UCI tabular phishing features (Baseline)
         ├── uci-ml-phishing-dataset.csv# UCI dataset mirror
-        ├── Nazario.csv                # Phishing email corpus
-        ├── SpamAssasin.csv            # SpamAssassin benchmark corpus
-        └── spam.csv                   # SMS/Message spam dataset
+        ├── Nazario.csv                # Phishing email corpus (Archived)
+        ├── SpamAssasin.csv            # SpamAssassin benchmark corpus (Archived)
+        └── spam.csv                   # SMS/Message spam dataset (Archived)
 ```
 
 ---
@@ -279,7 +312,7 @@ The FastAPI backend exposes the following REST & WebSocket endpoints:
 
 ---
 
-## 🧠 Machine Learning & Model Training (98.31% Accuracy)
+## 🧠 Machine Learning Benchmark (98.75% Accuracy)
 
 The model is trained using `train_modern_url_model.py` on 24,000 real-world samples (12,000 active PhishTank malicious URLs + 12,000 top web properties):
 
@@ -288,17 +321,17 @@ python3 ai_engine/train_modern_url_model.py
 ```
 
 ### Evaluation Benchmark
-* **Accuracy:** `98.31%`
-* **ROC-AUC Score:** `0.9994`
+* **Accuracy:** `98.75%`
+* **ROC-AUC Score:** `0.9996`
 * **Precision (Phishing):** `0.98`
 * **Recall (Phishing):** `0.99`
 
 ```
 Confusion Matrix:
-  True Negatives (Safe):      2347
-  False Positives (Alarm):    53
-  False Negatives (Missed):   28
-  True Positives (Blocked):   2372
+  True Negatives (Safe):      2354
+  False Positives (Alarm):    46
+  False Negatives (Missed):   14
+  True Positives (Blocked):   2386
 ```
 
 ---

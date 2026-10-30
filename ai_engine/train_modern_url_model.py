@@ -108,17 +108,30 @@ def train_and_export_modern_model():
     print(f"[*] Extracting 22 lexical & structural features for all {len(phish_urls) + len(legit_urls)} URLs...")
     X_rows = []
     y_labels = []
+    all_urls = []
 
     for url in legit_urls:
         X_rows.append(extract_features_vector(url))
         y_labels.append(0)  # 0: Legitimate / Safe
+        all_urls.append(url)
 
     for url in phish_urls:
         X_rows.append(extract_features_vector(url))
         y_labels.append(1)  # 1: Phishing / Malicious
+        all_urls.append(url)
 
     df = pd.DataFrame(X_rows, columns=FEATURE_NAMES)
     y = np.array(y_labels)
+
+    # Persist modern dataset for data scientists, audits & research
+    dataset_export_df = df.copy()
+    dataset_export_df.insert(0, "url", all_urls)
+    dataset_export_df["is_phishing"] = y_labels
+    datasets_dir = os.path.join(base_dir, "datasets")
+    os.makedirs(datasets_dir, exist_ok=True)
+    export_csv_path = os.path.join(datasets_dir, "modern_phishing_dataset_2026.csv")
+    dataset_export_df.to_csv(export_csv_path, index=False)
+    print(f"[✓] Exported modern dataset ({len(dataset_export_df)} samples) to: {export_csv_path}")
 
     print(f"[✓] Feature matrix built: shape {df.shape}")
     print(f"[*] Class Distribution:\n  - Safe (0): {sum(y == 0)}\n  - Phishing (1): {sum(y == 1)}")
