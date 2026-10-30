@@ -12,6 +12,19 @@ window.addEventListener("load", () => {
     const hasPassword = document.querySelector('input[type="password"]') !== null;
     const hasCreditCard = document.querySelector('input[autocomplete*="cc"], input[name*="card"], input[name*="cvv"], input[name*="cvc"], input[id*="card"]') !== null;
 
+    // Visual Spoofing Trap: Favicon URL tespiti
+    const faviconEl = document.querySelector('link[rel*="icon"]');
+    let faviconUrl = "";
+    try {
+        if (faviconEl && faviconEl.href) {
+            faviconUrl = faviconEl.href;
+        } else if (window.location.origin && window.location.origin.startsWith("http")) {
+            faviconUrl = window.location.origin + "/favicon.ico";
+        }
+    } catch(e) {
+        faviconUrl = "";
+    }
+
     // DOM Gözlemcisi: Sayfaya sonradan dinamik eklenen şüpheli iframe veya scriptleri engeller
     try {
         const observer = new MutationObserver((mutations) => {
@@ -43,7 +56,8 @@ window.addEventListener("load", () => {
                 page_text: pageText,
                 html_source: htmlSource,
                 has_password_field: hasPassword,
-                has_credit_card_field: hasCreditCard
+                has_credit_card_field: hasCreditCard,
+                favicon_url: faviconUrl
             },
             (response) => {
                 if (chrome.runtime.lastError || !response) return;

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AntiGravity SOC - Agent Protection Settings</title>
+    <link rel="icon" type="image/png" href="icon32.png">
+    <style>
+        :root {
+            --bg: #0b0d11;
+            --panel: #131720;
+            --panel-sub: #1a202c;
+            --border: #242c3d;
+            --border-hover: #38455e;
+            --text-main: #f0f4fc;
+            --text-muted: #8b9bb4;
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.25);
+            --gold: #c4a76c;
+            --danger: #ff3366;
+            --safe: #10b981;
+            --warning: #f59e0b;
+            --mono: "SF Mono", "Fira Code", monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.5;
+            padding: 32px 20px 80px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 760px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 28px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-img {
+            width: 42px;
+            height: 42px;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 204, 0.4));
+        }
+
+        .brand-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-text h1 span {
+            font-size: 11px;
+            background: rgba(0, 255, 204, 0.12);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-family: var(--mono);
+        }
+
+        .brand-text p {
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
+        /* Language Switcher */
+        .lang-switch {
+            display: flex;
+            background: var(--panel-sub);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active {
+            background: rgba(0, 255, 204, 0.15);
+            color: var(--accent);
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.2s;
+        }
+
+        .section-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .section-title svg {
+            color: var(--accent);
+        }
+
+        .section-desc {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+
+        /* Inputs */
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .text-input {
+            flex: 1;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            color: #fff;
+            font-family: var(--mono);
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .text-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 9px 16px;
+            border-radius: 7px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--panel-sub);
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #0b0d11;
+            border-color: var(--accent);
+            font-weight: 700;
+        }
+
+        .btn-primary:hover {
+            background: #24ffcf;
+            box-shadow: 0 0 14px var(--accent-glow);
+        }
+
+        .btn-danger {
+            color: var(--danger);
+            border-color: rgba(255, 51, 102, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 51, 102, 0.15);
+            border-color: var(--danger);
+        }
+
+        /* Toggle Options Grid */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .toggle-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .toggle-info h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 2px;
+        }
+
+        .toggle-info p {
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        /* Modern Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--border);
+            border-radius: 34px;
+            transition: 0.3s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        input:checked + .slider { background: var(--accent); }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+            background: #0b0d11;
+        }
+
+        /* Sensitivity Cards */
+        .mode-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .mode-card {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .mode-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .mode-card.active {
+            border-color: var(--accent);
+            background: rgba(0, 255, 204, 0.08);
+            box-shadow: 0 0 12px rgba(0, 255, 204, 0.15);
+        }
+
+        .mode-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .mode-card p {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Range Slider */
+        .slider-box {
+            margin-top: 10px;
+        }
+
+        .slider-head {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .slider-head span strong {
+            color: var(--accent);
+            font-family: var(--mono);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+            background: var(--border);
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        /* Whitelist Table */
+        .white-list-wrap {
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: rgba(0,0,0,0.2);
+            margin-top: 14px;
+        }
+
+        .white-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+
+        .white-item:last-child { border-bottom: none; }
+
+        /* Bottom Action Bar */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(19, 23, 32, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .bottom-inner {
+            width: 100%;
+            max-width: 760px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toast-msg {
+            color: var(--accent);
+            font-size: 12.5px;
+            font-weight: 600;
+            font-family: var(--mono);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="brand">
+                <img src="icon48.png" alt="AntiGravity Logo" class="logo-img">
+                <div class="brand-text">
+                    <h1>AntiGravity Security <span>v2.1 SOC</span></h1>
+                    <p data-i18n="tagline">Zero-Trust Real-Time Browser Threat Defense</p>
+                </div>
+            </div>
+            <div class="lang-switch">
+                <button class="lang-btn active" id="btnLangEN">EN</button>
+                <button class="lang-btn" id="btnLangTR">TR</button>
+            </div>
+        </header>
+
+        <!-- SECTION 1: SOC Backend Server -->
+        <div class="section-card">
+            <div class="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <span data-i18n="sec1Title">SOC AI Engine Server Connection</span>
+            </div>
+            <p class="section-desc" data-i18n="sec1Desc">Specify the endpoint of your local or remote AntiGravity SOC Python backend.</p>
+            <div class="input-group">
+                <input type="text" id="serverUrl" class="text-input" placeholder="http://127.0.0.1:8001">
+                <button class="btn" id="btnPing">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    <span data-i18n="btnTest">Ping Server</span>
+                </button>
+            </div>
+            <div id="pingResult" style="margin-top: 10px; font-size: 12px; font-family: var(--mono);"></div>
+        </div>
+
+        <!-- SECTION 2: Defense Sensitivity -->
+        <div class="section-card">
+            <div class="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span data-i18n="sec2Title">Zero-Trust Protection Sensitivity</span>
+            </div>
+            <p class="section-desc" data-i18n="sec2Desc">Select defense posture or fine-tune minimum machine learning risk threshold.</p>
+            
+            <div class="mode-cards">
+                <div class="mode-card" data-mode="strict">
+                    <h4 data-i18n="modeStrict">Strict (Paranoid)</h4>
+                    <p data-i18n="modeStrictDesc">Aggressive Zero-Day blocking (Threshold: 70%)</p>
+                </div>
+                <div class="mode-card active" data-mode="balanced">
+                    <h4 data-i18n="modeBalanced">Balanced (Default)</h4>
+                    <p data-i18n="modeBalancedDesc">Optimized precision and zero false positives (80%)</p>
+                </div>
+                <div class="mode-card" data-mode="permissive">
+                    <h4 data-i18n="modePermissive">Permissive</h4>
+                    <p data-i18n="modePermissiveDesc">High-confidence alerts only (Threshold: 90%)</p>
+                </div>
+            </div>
+
+            <div class="slider-box">
+                <div class="slider-head">
+                    <span data-i18n="lblSlider">Custom AI Block Threshold:</span>
+                    <span><strong id="thresholdVal">80%</strong></span>
+                </div>
+                <input type="range" id="thresholdSlider" min="50" max="95" value="80" step="5">
+            </div>
+        </div>
+
+        <!-- SECTION 3: Threat Modules -->
+        <div class="section-card">
+            <div class="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+                <span data-i18n="sec3Title">Advanced Detection Vectors</span>
+            </div>
+            <p class="section-desc" data-i18n="sec3Desc">Enable or disable specialized deep inspection defense engines.</p>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <h4 data-i18n="modVision">Visual Logo Perceptual Hashing (dHash)</h4>
+                    <p data-i18n="modVisionDesc">Detects visual brand impersonation and cloned favicons using 64-bit difference hashing.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="chkVisualHasing" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <h4 data-i18n="modHomograph">IDN Homograph & Punycode Trap</h4>
+                    <p data-i18n="modHomographDesc">Intercepts lookalike Cyrillic/Greek characters disguising malicious spoof domains.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="chkPunycode" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <h4 data-i18n="modForms">Credential Trap (Free Cloud Hosting)</h4>
+                    <p data-i18n="modFormsDesc">Instantly blocks password fields deployed on free cloud hosts (pages.dev, firebaseapp, etc.).</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="chkForms" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- SECTION 4: Alerts & Sound -->
+        <div class="section-card">
+            <div class="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span data-i18n="sec4Title">Alerts & System Feedback</span>
+            </div>
+            <p class="section-desc" data-i18n="sec4Desc">Configure how the extension communicates security events to the analyst.</p>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <h4 data-i18n="optNotify">Chrome Desktop Notifications</h4>
+                    <p data-i18n="optNotifyDesc">Display native system notification popups when malicious links are neutralized.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="chkNotifications" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- SECTION 5: Whitelist Management -->
+        <div class="section-card">
+            <div class="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span data-i18n="sec5Title">Verified Operator Whitelist</span>
+            </div>
+            <p class="section-desc" data-i18n="sec5Desc">Domains listed here bypass all AI and heuristic scoring entirely.</p>
+
+            <div class="input-group">
+                <input type="text" id="whiteInput" class="text-input" placeholder="e.g. internal-portal.corp.local">
+                <button class="btn" id="btnAddWhite">+ <span data-i18n="btnAdd">Add Domain</span></button>
+            </div>
+
+            <div class="white-list-wrap" id="whiteListWrap">
+                <div class="white-item" style="color: var(--text-muted); justify-content: center;" data-i18n="loading">
+                    Loading whitelist...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixed Bottom Save Bar -->
+    <div class="bottom-bar">
+        <div class="bottom-inner">
+            <span class="toast-msg" id="toastStatus"></span>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" id="btnReset" data-i18n="btnReset">Reset Defaults</button>
+                <button class="btn btn-primary" id="btnSave">💾 <span data-i18n="btnSave">Save Settings</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="options.js"></script>
+</body>
+</html>

@@ -533,6 +533,10 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     <span data-i18n="btnCsv">CSV Export</span>
                 </button>
+                <button class="btn" onclick="openWebhookModal()" style="border-color: #06b6d4; color: #06b6d4;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span data-i18n="btnWebhooks">Webhook Alerts</span>
+                </button>
                 <button class="btn btn-danger" onclick="clearLogsConfirm()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     <span data-i18n="btnClear">Purge Logs</span>
@@ -722,6 +726,63 @@
     </div>
 </div>
 
+<!-- WEBHOOK ALERTS CONFIGURATION MODAL -->
+<div id="webhookModal" class="modal" onclick="if(event.target===this) closeWebhookModal()">
+    <div class="modal-content" role="dialog" aria-modal="true" style="max-width: 620px;">
+        <div class="modal-header">
+            <h2 style="display:flex; align-items:center; gap:8px; color: #06b6d4;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span data-i18n="webhookModalTitle">Real-Time Threat Webhooks</span>
+            </h2>
+            <button class="close-btn" onclick="closeWebhookModal()">&times;</button>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;" data-i18n="webhookModalDesc">
+            Connect AntiGravity to your security operations chat rooms. Zero-day threats and blocks are dispatched instantly.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: #818cf8; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                    <span>👾 Discord Webhook URL</span>
+                </label>
+                <input type="url" id="cfgDiscord" placeholder="https://discord.com/api/webhooks/..." class="input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--line); border-radius: 6px; color: #fff; font-family: var(--mono); font-size: 12px;">
+            </div>
+
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                    <span>💬 Slack Incoming Webhook URL</span>
+                </label>
+                <input type="url" id="cfgSlack" placeholder="https://hooks.slack.com/services/..." class="input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--line); border-radius: 6px; color: #fff; font-family: var(--mono); font-size: 12px;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #0284c7; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <span>✈️ Telegram Bot Token</span>
+                    </label>
+                    <input type="text" id="cfgTgToken" placeholder="123456789:ABCdefGhI..." class="input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--line); border-radius: 6px; color: #fff; font-family: var(--mono); font-size: 12px;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #0284c7; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <span>🆔 Telegram Chat ID</span>
+                    </label>
+                    <input type="text" id="cfgTgChat" placeholder="-100123456789" class="input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--line); border-radius: 6px; color: #fff; font-family: var(--mono); font-size: 12px;">
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; gap: 10px;">
+            <button class="btn" onclick="testWebhookPing()" style="border-color: #06b6d4; color: #06b6d4;">
+                ⚡ <span data-i18n="btnTestPing">Send Test Alert</span>
+            </button>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary" onclick="closeWebhookModal()" data-i18n="btnClose">Cancel</button>
+                <button class="btn btn-primary" onclick="saveWebhookSettings()">💾 <span data-i18n="btnSaveWebhooks">Save Configuration</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="toasts" aria-live="polite"></div>
 
 <script>
@@ -794,6 +855,13 @@
             toastCleared: "All operational logs purged.",
             toastAddedWhite: "added to whitelist.",
             toastRemovedWhite: "removed from whitelist.",
+            btnWebhooks: "Webhook Alerts",
+            webhookModalTitle: "Real-Time Threat Webhooks",
+            webhookModalDesc: "Connect AntiGravity to your security operations chat rooms. Zero-day threats and blocks are dispatched instantly.",
+            btnTestPing: "Send Test Alert",
+            btnSaveWebhooks: "Save Configuration",
+            toastWebhookSaved: "Webhook configuration saved successfully.",
+            toastWebhookTestSent: "Test threat alert dispatched to webhooks.",
             defconNormal: "🛡️ DEFCON 5: NORMAL",
             defconElevated: "⚠️ DEFCON 3: ELEVATED",
             defconCritical: "🚨 DEFCON 1: CRITICAL ZERO-DAY INTERCEPTED",
@@ -866,6 +934,13 @@
             toastCleared: "Tüm operasyonel loglar temizlendi.",
             toastAddedWhite: "beyaz listeye eklendi.",
             toastRemovedWhite: "beyaz listeden çıkarıldı.",
+            btnWebhooks: "Webhook Alarmları",
+            webhookModalTitle: "Gerçek Zamanlı Tehdit Webhook'ları",
+            webhookModalDesc: "AntiGravity'yi güvenlik operasyon odalarınıza bağlayın. Sıfır-gün tehditleri ve engellemeler anında iletilir.",
+            btnTestPing: "Test Uyarısı Gönder",
+            btnSaveWebhooks: "Yapılandırmayı Kaydet",
+            toastWebhookSaved: "Webhook ayarları başarıyla kaydedildi.",
+            toastWebhookTestSent: "Test alarmı webhook kanallarına iletildi.",
             defconNormal: "🛡️ DEFCON 5: NORMAL",
             defconElevated: "⚠️ DEFCON 3: YÜKSEK TEHDİT",
             defconCritical: "🚨 DEFCON 1: KRİTİK SIFIR-GÜN SALDIRISI",
@@ -1620,6 +1695,61 @@
         await fetch(`${API}/api/clear-logs`, { method: 'POST' });
         toast(I18N[CURRENT_LANG].toastCleared);
         fetchLogs();
+    }
+
+    /* Webhook Alerts Management */
+    async function openWebhookModal() {
+        try {
+            const res = await fetch(`${API}/api/settings/webhooks`);
+            if (res.ok) {
+                const data = await res.json();
+                $('cfgDiscord').value = data.discord_webhook_url || '';
+                $('cfgSlack').value = data.slack_webhook_url || '';
+                $('cfgTgToken').value = data.telegram_bot_token || '';
+                $('cfgTgChat').value = data.telegram_chat_id || '';
+            }
+        } catch(e) {}
+        $('webhookModal').classList.add('open');
+    }
+
+    function closeWebhookModal() {
+        $('webhookModal').classList.remove('open');
+    }
+
+    async function saveWebhookSettings() {
+        const payload = {
+            discord_webhook_url: $('cfgDiscord').value.trim(),
+            slack_webhook_url: $('cfgSlack').value.trim(),
+            telegram_bot_token: $('cfgTgToken').value.trim(),
+            telegram_chat_id: $('cfgTgChat').value.trim()
+        };
+        try {
+            const res = await fetch(`${API}/api/settings/webhooks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                toast(I18N[CURRENT_LANG].toastWebhookSaved || "Webhook configuration saved successfully.");
+                closeWebhookModal();
+            }
+        } catch(e) {
+            toast("Failed to save webhook settings.");
+        }
+    }
+
+    async function testWebhookPing() {
+        toast("Dispatching test alert...");
+        try {
+            const res = await fetch(`${API}/api/test-webhook`, { method: 'POST' });
+            if (res.ok) {
+                toast(I18N[CURRENT_LANG].toastWebhookTestSent || "Test threat alert dispatched to webhooks.");
+            } else {
+                toast("Webhook test dispatch returned error.");
+            }
+        } catch(e) {
+            toast("Failed to dispatch test webhook.");
+        }
     }
 
     /* Global Init */

@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  antigravity-soc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: antigravity-soc:latest
+    container_name: antigravity-soc-engine
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Optional external incident webhooks:
+      # - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+      # - SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+      # - TELEGRAM_BOT_TOKEN=...
+      # - TELEGRAM_CHAT_ID=...
+    volumes:
+      - ./ai_engine/antigravity_logs.db:/app/ai_engine/antigravity_logs.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnWhitelist = document.getElementById("btnWhitelist");
     const btnReport = document.getElementById("btnReport");
     const btnDashboard = document.getElementById("btnDashboard");
+    const btnOptions = document.getElementById("btnOptions");
 
     let currentUrl = "";
     let currentDomain = "";
@@ -107,4 +108,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     btnDashboard.addEventListener("click", () => {
         chrome.tabs.create({ url: "http://127.0.0.1:8001/dashboard" });
     });
+
+    if (btnOptions) {
+        btnOptions.addEventListener("click", () => {
+            if (chrome.runtime.openOptionsPage) {
+                chrome.runtime.openOptionsPage();
+            } else {
+                window.open(chrome.runtime.getURL("options.html"));
+            }
+        });
+    }
 });

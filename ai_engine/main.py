@@ -27,6 +27,7 @@ from feature_extractor import (
     check_free_hosting,
     FEATURE_NAMES
 )
+from visual_detector import check_visual_spoofing
 
 app = FastAPI(title="AntiGravity SOC - Real-Time Zero-Trust AI Engine", version="2.0.0")
 
@@ -133,7 +134,28 @@ def init_db():
             )
         """)
 
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )
+        """)
+
 init_db()
+
+def get_setting(key: str, default: str = "") -> str:
+    try:
+        with db() as conn:
+            row = conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+            if row and row["value"]:
+                return str(row["value"])
+    except Exception:
+        pass
+    return os.environ.get(key.upper(), default)
+
+def set_setting(key: str, value: str):
+    with db() as conn:
+        conn.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, str(value)))
 
 LOG_COLUMNS = (
     "id, timestamp, time, date, url, domain, action, reason, target_url, details, detector, "
@@ -197,6 +219,7 @@ class TrafficData(BaseModel):
     html_source: str = ""
     has_password_field: bool = False
     has_credit_card_field: bool = False
+    favicon_url: str = ""
 
 class DomainBody(BaseModel):
     domain: str = ""
@@ -204,6 +227,82 @@ class DomainBody(BaseModel):
 class ReportPhishBody(BaseModel):
     url: str = ""
     reason: str = "Kullanıcı Bildirimi"
+
+class WebhookSettings(BaseModel):
+    discord_webhook_url: str = ""
+    slack_webhook_url: str = ""
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
+
+async def dispatch_webhook_alerts(log_entry: dict):
+    """Dispatches real-time incident alerts to Discord, Slack, and Telegram."""
+    discord_url = get_setting("discord_webhook_url")
+    slack_url = get_setting("slack_webhook_url")
+    tg_token = get_setting("telegram_bot_token")
+    tg_chat_id = get_setting("telegram_chat_id")
+
+    if not any([discord_url, slack_url, (tg_token and tg_chat_id)]):
+        return
+
+    url = log_entry.get("url", "")
+    domain = log_entry.get("domain", "")
+    reason = log_entry.get("reason", "")
+    action = log_entry.get("action", "")
+    detector = log_entry.get("detector", "")
+    url_score = log_entry.get("url_score", 0)
+    timestamp = log_entry.get("timestamp", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    # Discord Webhook
+    if discord_url and discord_url.startswith("https://discord.com/api/webhooks/"):
+        try:
+            discord_payload = {
+                "username": "AntiGravity SOC Defense",
+                "avatar_url": "https://raw.githubusercontent.com/MFahadFaisal/AntiGravity/main/browser_agent/icon128.png",
+                "embeds": [{
+                    "title": f"🚨 [AntiGravity] Threat Intercepted: {action}",
+                    "description": f"**Domain:** `{domain}`\n**Reason:** {reason}",
+                    "color": 16711739 if action == "BLOCK" else 16763904,
+                    "fields": [
+                        {"name": "Target URL", "value": f"`{url[:120]}`", "inline": False},
+                        {"name": "Threat Detector", "value": detector, "inline": True},
+                        {"name": "AI Risk Score", "value": f"**%{url_score}**", "inline": True},
+                        {"name": "SOC Event Time", "value": timestamp, "inline": True}
+                    ],
+                    "footer": {
+                        "text": "AntiGravity Zero-Trust SOC System"
+                    }
+                }]
+            }
+            requests.post(discord_url, json=discord_payload, timeout=2.5)
+        except Exception as e:
+            print(f"[!] Discord Webhook Hatası: {e}")
+
+    # Slack Webhook
+    if slack_url and slack_url.startswith("https://hooks.slack.com/"):
+        try:
+            slack_payload = {
+                "text": f"🚨 *AntiGravity SOC Incident Alert* [{action}]\n*Domain:* `{domain}`\n*Risk Score:* %{url_score}\n*Reason:* {reason}\n*URL:* {url[:120]}"
+            }
+            requests.post(slack_url, json=slack_payload, timeout=2.5)
+        except Exception as e:
+            print(f"[!] Slack Webhook Hatası: {e}")
+
+    # Telegram Bot
+    if tg_token and tg_chat_id:
+        try:
+            tg_api = f"https://api.telegram.org/bot{tg_token}/sendMessage"
+            msg = (
+                f"🚨 *AntiGravity SOC Threat Alert*\n\n"
+                f"🛡️ *Action:* {action}\n"
+                f"🌐 *Domain:* `{domain}`\n"
+                f"🎯 *Risk Score:* %{url_score}\n"
+                f"🔍 *Reason:* {reason}\n"
+                f"🔗 *URL:* `{url[:100]}`\n"
+                f"⏱️ *Time:* {timestamp}"
+            )
+            requests.post(tg_api, json={"chat_id": tg_chat_id, "text": msg, "parse_mode": "Markdown"}, timeout=2.5)
+        except Exception as e:
+            print(f"[!] Telegram Webhook Hatası: {e}")
 
 # ------------------------------------------------------------------
 # ANAHTAR KELİMELER, OSINT / PHISHTANK FEED & SİSTEM KORUMASI
@@ -412,6 +511,14 @@ async def gatekeeper_decision(data: TrafficData):
     free_host_found = bool(check_free_hosting(domain))
     credential_trap = bool(data.has_password_field and free_host_found)
 
+    # Visual / Favicon Perceptual Hash Check
+    visual_result = {"is_visual_spoof": False}
+    if data.favicon_url and not is_system_safe(domain) and not whitelisted:
+        try:
+            visual_result = check_visual_spoofing(data.favicon_url, domain)
+        except Exception:
+            visual_result = {"is_visual_spoof": False}
+
     local_threat = {"is_scam": False}
     osint_result = {"is_scam": False, "details": ""}
     phishing_found = False
@@ -459,6 +566,15 @@ async def gatekeeper_decision(data: TrafficData):
         reason = f"Adli Güvenlik Tespiti: '{short_url}' Uluslararası Karakter Sahtekarlığı (IDN/Punycode Homograph Saldırısı)!"
         url_score = 100
         mitre_tag = "T1566.002: Homograph Phishing"
+
+    elif visual_result.get("is_visual_spoof"):
+        action = "BLOCK"
+        is_hard_block = True
+        brand_name = visual_result.get("brand", "Protected Brand")
+        dist = visual_result.get("hamming_dist", 0)
+        reason = f"Görsel Klon Tespiti: '{brand_name}' resmi kurumsal logosu yetkisiz alanda taklit ediliyor (Perceptual Hash: {dist}/64)!"
+        url_score = 100
+        mitre_tag = f"T1566.002: Visual Impersonation ({brand_name})"
 
     elif credential_trap:
         action = "BLOCK"
@@ -569,6 +685,10 @@ async def gatekeeper_decision(data: TrafficData):
     formatted = format_log(log_entry)
     asyncio.create_task(ws_manager.broadcast(formatted))
 
+    # Dispatch external webhook alerts (Discord / Slack / Telegram) for high-risk / blocked threats
+    if blocked or url_score >= 85:
+        asyncio.create_task(dispatch_webhook_alerts(log_entry))
+
     return {
         "is_fake": blocked,
         "is_hard_block": blocked and is_hard_block,
@@ -652,6 +772,17 @@ def get_logs():
         "total_scans": total_scans,
         "safe_scans": safe_scans,
         "blocked_scans": blocked_scans,
+    }
+
+@app.get("/api/stats")
+def get_stats():
+    total_scans, safe_scans, blocked_scans = get_stats_from_db()
+    threat_ratio = round((blocked_scans / total_scans * 100), 2) if total_scans > 0 else 0.0
+    return {
+        "total": total_scans,
+        "safe": safe_scans,
+        "blocked": blocked_scans,
+        "threat_ratio": threat_ratio
     }
 
 @app.get("/api/details/{log_id}")
@@ -783,7 +914,51 @@ def remove_whitelist(body: DomainBody):
     return {"status": "success", "message": f"{domain} beyaz listeden çıkarıldı."}
 
 # ------------------------------------------------------------------
-# 7. DASHBOARD ARAYÜZÜ
+# 7. SİSTEM SAĞLIĞI VE WEBHOOK YAPILANDIRMASI
+# ------------------------------------------------------------------
+@app.get("/health")
+def health_check():
+    return {
+        "status": "healthy",
+        "service": "AntiGravity SOC Engine",
+        "version": "2.1.0",
+        "model_loaded": url_model is not None,
+        "database": os.path.exists(DB_FILE)
+    }
+
+@app.get("/api/settings/webhooks")
+def get_webhook_settings():
+    return {
+        "discord_webhook_url": get_setting("discord_webhook_url"),
+        "slack_webhook_url": get_setting("slack_webhook_url"),
+        "telegram_bot_token": get_setting("telegram_bot_token"),
+        "telegram_chat_id": get_setting("telegram_chat_id")
+    }
+
+@app.post("/api/settings/webhooks")
+def save_webhook_settings(settings: WebhookSettings):
+    set_setting("discord_webhook_url", settings.discord_webhook_url.strip())
+    set_setting("slack_webhook_url", settings.slack_webhook_url.strip())
+    set_setting("telegram_bot_token", settings.telegram_bot_token.strip())
+    set_setting("telegram_chat_id", settings.telegram_chat_id.strip())
+    return {"status": "success", "message": "Webhook ayarları başarıyla kaydedildi."}
+
+@app.post("/api/test-webhook")
+async def test_webhook():
+    test_entry = {
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "url": "https://test.antigravity-phish-simulation.xyz/login",
+        "domain": "test.antigravity-phish-simulation.xyz",
+        "action": "BLOCK",
+        "reason": "SOC Test Bildirimi: Webhook entegrasyon doğrulaması başarılı!",
+        "detector": "AntiGravity SOC Test Probe (v2.1)",
+        "url_score": 99
+    }
+    await dispatch_webhook_alerts(test_entry)
+    return {"status": "success", "message": "Test bildirimi kayıtlı tüm webhook kanallarına iletildi."}
+
+# ------------------------------------------------------------------
+# 8. DASHBOARD ARAYÜZÜ
 # ------------------------------------------------------------------
 @app.get("/")
 @app.get("/dashboard")
