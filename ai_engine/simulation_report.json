@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-10-30 15:59:22",
+  "stats": {
+    "total": 154,
+    "safe": 108,
+    "blocked": 46,
+    "threat_ratio": 29.87
+  },
+  "crypto_digest_sha256": "6ad7a79974b510faa832e48465d499651782690eb315306b66c96a17a3d22b8f",
+  "results": [
+    {
+      "id": "THREAT-001",
+      "name": "IDN Homograph Homoglyph Attack",
+      "category": "Spearphishing / Homograph",
+      "target_url": "https://xn--pple-43d.com/login/auth.php",
+      "expected": "BLOCK",
+      "actual": "BLOCK",
+      "score": 100,
+      "mitre": "T1566.002: Homograph Phishing",
+      "reason": "Adli Güvenlik Tespiti: 'xn--pple-43d.com/login/auth.php' Uluslararası Karakter Sahtekarlığı (IDN/Punycode Homograph Saldırısı)!",
+      "latency_ms": 53.97,
+      "success": true
+    },
+    {
+      "id": "THREAT-002",
+      "name": "Credential Harvester on Free Cloud Hosting",
+      "category": "Credential Access / Cloud Trap",
+      "target_url": "https://chase-bank-verify-account.pages.dev/login.html",
+      "expected": "BLOCK",
+      "actual": "BLOCK",
+      "score": 100,
+      "mitre": "T1056: Input Capture (Credential Harvesting)",
+      "reason": "Kimlik Avı Koruması: 'chase-bank-verify-account.pages.dev/l...' Ücretsiz bulut altyapısında yetkisiz şifre toplama formu tespit edildi!",
+      "latency_ms": 38.67,
+      "success": true
+    },
+    {
+      "id": "THREAT-003",
+      "name": "Brand Spoofing & Impersonation on High-Risk TLD",
+      "category": "Spearphishing Link",
+      "target_url": "http://paypal-security-verification-center.xyz/update-billing.php?id=83749",
+      "expected": "BLOCK",
+      "actual": "BLOCK",
+      "score": 99,
+      "mitre": "T1566.002: Spearphishing Link",
+      "reason": "AI Model Tespiti: 'paypal-security-verification-center.x...' Sahte Marka Taklidi (Brand Impersonation / Spoofing)!",
+      "latency_ms": 37.81,
+      "success": true
+    },
+    {
+      "id": "THREAT-004",
+      "name": "High-Entropy Lexical Zero-Day Phishing",
+      "category": "Machine Learning Detection",
+      "target_url": "http://secure-banking-portal-auth-reset-kyc-validation.top/confirm?token=a8f9c0e1234",
+      "expected": "BLOCK",
+      "actual": "BLOCK",
+      "score": 95,
+      "mitre": "T1566.002: Machine Learning Phishing Detection",
+      "reason": "AI Model Tespiti: 'secure-banking-portal-auth-reset-kyc-...' Sahte/Oltalama URL Yapısı (%95 Risk)!",
+      "latency_ms": 49.89,
+      "success": true
+    },
+    {
+      "id": "THREAT-005",
+      "name": "Illegal Gambling Vector Policy Enforcement",
+      "category": "Policy Violation",
+      "target_url": "http://super-casino-slot-bahis-jackpot.com/play",
+      "expected": "BLOCK",
+      "actual": "BLOCK",
+      "score": 90,
+      "mitre": "Policy: Illegal Gambling",
+      "reason": "AI Model Koruması: 'super-casino-slot-bahis-jackpot.com/play' Bahis/Kumar Sitesi (Erişim Engellendi)",
+      "latency_ms": 39.7,
+      "success": true
+    },
+    {
+      "id": "BENIGN-001",
+      "name": "Legitimate Search Engine Query (SERP Awareness)",
+      "category": "Benign Navigation",
+      "target_url": "https://www.google.com/search?q=cybersecurity+defense+frameworks",
+      "expected": "ALLOW",
+      "actual": "ALLOW",
+      "score": 0,
+      "mitre": "None",
+      "reason": "Sistem Dokunulmaz Servisi: Güvenli Altyapı",
+      "latency_ms": 4.29,
+      "success": true
+    },
+    {
+      "id": "BENIGN-002",
+      "name": "Legitimate Developer Infrastructure",
+      "category": "Benign Navigation",
+      "target_url": "https://github.com/MFahadFaisal/AntiGravity",
+      "expected": "ALLOW",
+      "actual": "ALLOW",
+      "score": 0,
+      "mitre": "None",
+      "reason": "Sistem Dokunulmaz Servisi: Güvenli Altyapı",
+      "latency_ms": 4.49,
+      "success": true
+    }
+  ]
+}
