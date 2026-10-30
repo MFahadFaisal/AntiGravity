@@ -108,7 +108,12 @@
 * **Active PhishTank Threat Intel Feed**: A background thread asynchronously synchronizes verified active malicious URLs directly from PhishTank into the local SQLite database cache (25,000+ cached threats).
 * **Real-Time OSINT Reputation Scraper**: Performs automated web intelligence scraping across DuckDuckGo, Bing, and Yahoo to aggregate threat signals, user complaints, and fraudulent domain disclosures.
 
-### 3. SOC & Digital Forensics Suite with WebSockets
+### 3. SOC & Digital Forensics Suite with WebSockets & 3D Radar
+* **Instant Bilingual Localization (🇹🇷 TR / 🇬🇧 EN)**: Complete 1-click language switcher in the header and sidebar that translates the entire interface, status badges, DEFCON alerts, table columns, and incident dossiers instantly with zero reload.
+* **Interactive 3D Cyber Threat Radar & Globe**: A hardware-accelerated 3D wireframe telemetry hemisphere rendered in real-time. Features 360-degree mouse drag rotation, sweeping radar beams, and pulsating 3D beacon waves whenever threats are intercepted.
+* **Dynamic DEFCON Threat Condition Banner**: Real-time threat posture indicator scaling dynamically from `DEFCON 5: NORMAL` through `DEFCON 3: ELEVATED` up to `DEFCON 1: CRITICAL ZERO-DAY INTERCEPTED`.
+* **3D Perspective Card Tilt**: Hardware-accelerated 3D tilt interaction on all telemetry cards responding to cursor movement with ambient specular lighting.
+* **Tactical Synthesized Audio Engine**: Zero-asset procedural audio synthesizer using the Web Audio API to deliver subtle sci-fi acoustic cues on intercepted attacks (with mute toggle).
 * **Live WebSocket Streaming (`/ws/logs`)**: High-performance real-time telemetry streaming pushes new alerts to connected analysts without HTTP polling delay.
 * **MITRE ATT&CK Tagging**: Categorizes incidents using standard cyber threat intelligence taxonomies (e.g. `T1566.002: Spearphishing Link`, `T1056: Input Capture`, `T1566.002: Homograph Phishing`).
 * **Defanged URL Safety**: Defangs all displayed indicators of compromise (`http://bad.com` $\to$ `hxxp://bad[.]com`) to protect security operations personnel from accidental navigation.

@@ -1,367 +1,647 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adli Güvenlik SOC Dashboard</title>
+    <title>AntiGravity SOC - Cyber Defense Operations Center</title>
     <style>
         :root {
-            --bg: #1b1915;
-            --bg-2: #211f1a;
-            --panel: #26231d;
-            --panel-2: #2d2923;
-            --line: #3b362c;
-            --line-soft: #312d25;
-            --text: #e8e1d2;
-            --text-2: #c4bba9;
-            --muted: #8f8676;
-            --brass: #c2a66b;
-            --brass-dim: #8d7a4d;
-            --danger: #c0604a;
-            --danger-bg: rgba(192, 96, 74, 0.13);
-            --warning: #f39c12;
-            --warning-bg: rgba(243, 156, 18, 0.15);
-            --safe: #86a074;
-            --safe-bg: rgba(134, 160, 116, 0.13);
-            --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-            --sans: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
-            --mono: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+            --bg-deep: #0a0b0e;
+            --bg-panel: #11141a;
+            --bg-card: #161b24;
+            --bg-card-hover: #1c2330;
+            --line: #262f40;
+            --line-light: #344056;
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
+            --text-muted: #64748b;
+            --gold: #c4a76c;
+            --gold-dim: #8d7547;
+            --gold-glow: rgba(196, 167, 108, 0.25);
+            --safe: #10b981;
+            --safe-glow: rgba(16, 185, 129, 0.2);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.25);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.2);
+            --cyan: #06b6d4;
+            --cyan-glow: rgba(6, 182, 212, 0.25);
+            --mono: "SF Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+            --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --serif: "Iowan Old Style", Palatino, Georgia, serif;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: var(--sans);
-            color: var(--text);
-            background-color: var(--bg);
-            background-image: linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px);
-            background-size: 100% 28px;
+            color: var(--text-main);
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(6, 182, 212, 0.05), transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(196, 167, 108, 0.04), transparent 45%),
+                linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
             min-height: 100vh;
             line-height: 1.45;
+            overflow-x: hidden;
         }
 
-        button, input, select { font-family: inherit; font-size: 14px; color: inherit; }
+        button, input, select { font-family: inherit; font-size: 13.5px; color: inherit; }
         button { cursor: pointer; }
-        :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+        :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
-        /* ---------- Yerleşim ---------- */
-        .shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100vh; }
+        /* ---------- Shell Layout ---------- */
+        .shell { display: grid; grid-template-columns: 270px minmax(0, 1fr); min-height: 100vh; }
 
+        /* ---------- Sidebar ---------- */
         .side {
             position: sticky; top: 0; height: 100vh;
-            display: flex; flex-direction: column; gap: 26px;
-            padding: 26px 18px;
-            background: var(--bg-2);
+            display: flex; flex-direction: column; gap: 20px;
+            padding: 24px 18px;
+            background: rgba(17, 20, 26, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             border-right: 1px solid var(--line);
+            z-index: 20;
         }
-        .brand { display: flex; align-items: center; gap: 12px; padding: 0 6px 20px; border-bottom: 1px solid var(--line-soft); }
-        .brand svg { flex-shrink: 0; }
-        .brand-kicker { display: block; font-size: 10.5px; letter-spacing: 0.22em; color: var(--muted); }
-        .brand strong { font-family: var(--mono); font-size: 14px; letter-spacing: 0.04em; color: var(--brass); }
 
+        .brand {
+            display: flex; align-items: center; gap: 12px;
+            padding: 0 4px 18px; border-bottom: 1px solid var(--line);
+        }
+        .brand-icon {
+            width: 36px; height: 36px; border-radius: 8px;
+            border: 1px solid var(--gold);
+            background: linear-gradient(135deg, #1f1b13, #141311);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 16px var(--gold-glow);
+        }
+        .brand-kicker { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; }
+        .brand strong { font-family: var(--mono); font-size: 13.5px; color: var(--text-main); display: block; }
+
+        /* Navigation */
         .nav { display: flex; flex-direction: column; gap: 6px; }
         .nav-btn {
             display: flex; align-items: center; justify-content: space-between; gap: 10px;
-            padding: 11px 12px; text-align: left;
+            padding: 10px 12px; text-align: left;
             background: transparent; border: 1px solid transparent; border-left: 3px solid transparent;
-            border-radius: 6px; color: var(--text-2); font-weight: 600;
-            transition: background 0.15s, border-color 0.15s, color 0.15s;
+            border-radius: 6px; color: var(--text-sub); font-weight: 600; font-size: 13px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .nav-btn:hover { background: var(--panel); color: var(--text); }
-        .nav-btn.active { background: var(--panel); border-left-color: var(--brass); color: var(--text); }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.04); color: var(--text-main); }
+        .nav-btn.active {
+            background: rgba(196, 167, 108, 0.1);
+            border-left-color: var(--gold);
+            color: var(--text-main);
+            box-shadow: inset 0 0 14px rgba(196, 167, 108, 0.08);
+        }
         .nav-count {
             min-width: 24px; padding: 1px 7px; text-align: center;
-            font-family: var(--mono); font-size: 11.5px; color: var(--muted);
-            background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+            font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+            background: var(--bg-deep); border: 1px solid var(--line); border-radius: 10px;
         }
-        .nav-btn.active .nav-count { color: var(--brass); border-color: var(--brass-dim); }
+        .nav-btn.active .nav-count { color: var(--gold); border-color: var(--gold-dim); }
 
-        .live-box { margin-top: auto; padding: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
-        .live-pill { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: var(--safe); }
-        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--safe); animation: breathe 2.4s ease-in-out infinite; }
-        .live-box.paused .live-pill { color: var(--muted); }
-        .live-box.paused .live-dot { background: var(--muted); animation: none; }
+        /* Quick Controls (Language, Sound) */
+        .side-controls {
+            display: flex; gap: 8px; margin-top: auto;
+        }
+        .side-ctrl-btn {
+            flex: 1; padding: 7px 10px; border-radius: 6px;
+            background: var(--bg-card); border: 1px solid var(--line);
+            color: var(--text-sub); font-size: 12px; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.2s;
+        }
+        .side-ctrl-btn:hover { border-color: var(--gold); color: var(--text-main); }
+        .side-ctrl-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(196, 167, 108, 0.12); }
+
+        /* Live Box */
+        .live-box {
+            padding: 14px; background: rgba(22, 27, 36, 0.7);
+            border: 1px solid var(--line); border-radius: 8px;
+        }
+        .live-pill {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.16em; color: var(--safe);
+        }
+        .live-dot-wrap { display: flex; align-items: center; gap: 7px; }
+        .live-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--safe);
+            box-shadow: 0 0 8px var(--safe); animation: pulseDot 2s ease-in-out infinite;
+        }
+        .live-box.paused .live-dot { background: var(--warning); box-shadow: 0 0 8px var(--warning); animation: none; }
+        .live-box.paused .live-pill { color: var(--warning); }
+        .live-box.offline .live-dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); animation: none; }
         .live-box.offline .live-pill { color: var(--danger); }
-        .live-box.offline .live-dot { background: var(--danger); animation: none; }
-        .live-meta { margin: 8px 0 12px; font-size: 12px; color: var(--muted); font-family: var(--mono); }
-        .live-btn { width: 100%; padding: 7px 10px; background: transparent; border: 1px solid var(--line); border-radius: 6px; color: var(--text-2); font-weight: 600; font-size: 13px; }
-        .live-btn:hover { border-color: var(--brass-dim); color: var(--text); }
-        .hint { margin-top: 12px; font-size: 11.5px; color: var(--muted); }
-        kbd { padding: 0 5px; font-family: var(--mono); font-size: 11px; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; }
+        .live-meta { margin: 8px 0 10px; font-size: 11.5px; color: var(--text-muted); font-family: var(--mono); }
+        .live-btn {
+            width: 100%; padding: 7px 10px; background: transparent;
+            border: 1px solid var(--line); border-radius: 6px; color: var(--text-sub);
+            font-weight: 600; font-size: 12px; transition: all 0.2s;
+        }
+        .live-btn:hover { border-color: var(--gold-dim); color: var(--text-main); background: rgba(255, 255, 255, 0.04); }
 
-        .main { padding: 30px 36px 50px; min-width: 0; }
+        /* ---------- Main Content ---------- */
+        .main { padding: 28px 36px 60px; min-width: 0; }
 
-        /* ---------- Başlık ---------- */
-        .header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
-        .header .kicker { font-size: 11px; letter-spacing: 0.24em; color: var(--brass-dim); margin-bottom: 6px; }
-        h1 { font-family: var(--serif); font-size: 29px; font-weight: 600; letter-spacing: 0.01em; color: var(--text); }
-        .header-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+        /* Header */
+        .header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            gap: 20px; flex-wrap: wrap; margin-bottom: 22px; padding-bottom: 18px;
+            border-bottom: 1px solid var(--line);
+        }
+        .header-titles .kicker {
+            font-size: 11px; font-weight: 700; letter-spacing: 0.24em;
+            color: var(--gold); text-transform: uppercase; margin-bottom: 6px;
+        }
+        .header-titles h1 {
+            font-family: var(--serif); font-size: 28px; font-weight: 600;
+            color: #fff; letter-spacing: -0.01em;
+        }
+        .header-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-        .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 6px; font-weight: 600; text-decoration: none; border: 1px solid var(--line); background: var(--panel); color: var(--text); transition: background 0.15s, border-color 0.15s; }
-        .btn:hover { background: var(--panel-2); border-color: var(--brass-dim); }
-        .btn-report, .btn-primary { background: var(--brass); border-color: var(--brass); color: #231e12; }
-        .btn-report:hover, .btn-primary:hover { background: #d1b67d; border-color: #d1b67d; }
-        .btn-warning { background: transparent; border-color: var(--brass-dim); color: var(--brass); }
-        .btn-warning:hover { background: rgba(194, 166, 107, 0.12); border-color: var(--brass); }
-        .btn-danger { background: transparent; border-color: rgba(192, 96, 74, 0.55); color: var(--danger); }
-        .btn-danger:hover { background: var(--danger); border-color: var(--danger); color: #1b1915; }
-        .btn-secondary { background: transparent; color: var(--text-2); }
-        .btn-sm-danger { padding: 5px 11px; font-size: 13px; background: transparent; border: 1px solid rgba(192, 96, 74, 0.5); border-radius: 5px; color: var(--danger); font-weight: 600; }
-        .btn-sm-danger:hover { background: var(--danger); color: #1b1915; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px;
+            border-radius: 6px; font-weight: 600; font-size: 13px; text-decoration: none;
+            border: 1px solid var(--line); background: var(--bg-card); color: var(--text-main);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn:hover { background: var(--bg-card-hover); border-color: var(--gold-dim); transform: translateY(-1px); }
+        .btn-report, .btn-primary { background: var(--gold); border-color: var(--gold); color: #18150e; }
+        .btn-report:hover, .btn-primary:hover { background: #d4b87e; border-color: #d4b87e; color: #18150e; box-shadow: 0 4px 14px var(--gold-glow); }
+        .btn-danger { background: transparent; border-color: rgba(239, 68, 68, 0.4); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+        .btn-secondary { background: transparent; color: var(--text-sub); }
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: rise 0.25s ease-out; }
+        /* Language Switcher Badge in Header */
+        .lang-switch {
+            display: inline-flex; padding: 2px; border-radius: 8px;
+            background: var(--bg-card); border: 1px solid var(--line);
+        }
+        .lang-btn {
+            padding: 5px 10px; border: 0; background: transparent;
+            border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .lang-btn.active {
+            background: var(--gold); color: #18150e; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
 
-        /* ---------- İstatistik defteri ---------- */
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 18px; }
-        .card { position: relative; padding: 20px 22px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-        .card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--brass-dim); }
+        /* DEFCON Threat Condition Banner */
+        .defcon-banner {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; flex-wrap: wrap; padding: 12px 18px; margin-bottom: 22px;
+            border-radius: 8px; border: 1px solid;
+            transition: all 0.4s ease;
+        }
+        .defcon-banner.level-normal {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.05));
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        .defcon-banner.level-elevated {
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(196, 167, 108, 0.08));
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+        .defcon-banner.level-critical {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(244, 63, 94, 0.08));
+            border-color: rgba(239, 68, 68, 0.5);
+            animation: pulseCritical 3s ease-in-out infinite;
+        }
+        .defcon-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-family: var(--mono); font-size: 12px; font-weight: 800;
+            letter-spacing: 0.14em; text-transform: uppercase;
+        }
+        .defcon-text { font-size: 13px; color: var(--text-sub); }
+        .defcon-meta { font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+
+        /* ---------- 3D Threat Radar / Globe Section ---------- */
+        .visualizer-card {
+            position: relative;
+            background: radial-gradient(circle at center, rgba(17, 24, 39, 0.9), rgba(10, 11, 14, 0.98));
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 22px;
+            overflow: hidden;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        .visualizer-head {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px; position: relative; z-index: 2;
+        }
+        .visualizer-title {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 14px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-main);
+        }
+        .canvas-container {
+            position: relative; width: 100%; height: 210px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #globeCanvas {
+            width: 100%; height: 100%; display: block;
+            cursor: grab;
+        }
+        #globeCanvas:active { cursor: grabbing; }
+
+        .radar-hud {
+            position: absolute; right: 16px; bottom: 12px;
+            display: flex; flex-direction: column; gap: 4px;
+            font-family: var(--mono); font-size: 11px; color: var(--cyan);
+            background: rgba(10, 11, 14, 0.85); padding: 8px 12px;
+            border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 6px;
+            pointer-events: none; z-index: 5;
+        }
+
+        /* ---------- 3D Tilt Stats Cards ---------- */
+        .stats {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+            margin-bottom: 20px; perspective: 1000px;
+        }
+        .card {
+            position: relative; padding: 20px 22px;
+            background: var(--bg-card);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            transform-style: preserve-3d;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+        }
+        .card:hover {
+            border-color: var(--gold-dim);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        }
+        .card::before {
+            content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+            background: var(--line-light); border-radius: 10px 10px 0 0;
+        }
+        .card.total::before { background: var(--cyan); }
         .card.safe::before { background: var(--safe); }
         .card.blocked::before { background: var(--danger); }
-        .card.suspicious::before { background: var(--warning); }
-        .card p { font-size: 11.5px; font-weight: 700; letter-spacing: 0.2em; color: var(--muted); }
-        .card h3 { margin: 8px 0 10px; font-family: var(--serif); font-size: 46px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: var(--text); }
+        .card.threat-rate::before { background: var(--gold); }
+
+        .card-label { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; color: var(--text-muted); text-transform: uppercase; }
+        .card h3 {
+            margin: 8px 0 10px; font-family: var(--serif); font-size: 38px;
+            font-weight: 600; line-height: 1; color: #fff; font-variant-numeric: tabular-nums;
+        }
+        .card.total h3 { color: #e2e8f0; }
         .card.safe h3 { color: var(--safe); }
         .card.blocked h3 { color: var(--danger); }
-        .card.suspicious h3 { color: var(--warning); }
-        .card .ratio { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
-        .bar { flex: 1; height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
-        .bar > b { display: block; height: 100%; width: 0; background: var(--brass-dim); transition: width 0.5s ease; }
+        .card.threat-rate h3 { color: var(--gold); }
+
+        .card .ratio {
+            display: flex; align-items: center; gap: 8px;
+            font-family: var(--mono); font-size: 11.5px; color: var(--text-muted);
+        }
+        .bar { flex: 1; height: 4px; background: rgba(255, 255, 255, 0.06); border-radius: 2px; overflow: hidden; }
+        .bar > b { display: block; height: 100%; width: 0; background: var(--line-light); transition: width 0.6s ease; }
         .card.safe .bar > b { background: var(--safe); }
         .card.blocked .bar > b { background: var(--danger); }
-        .card.suspicious .bar > b { background: var(--warning); }
+        .card.threat-rate .bar > b { background: var(--gold); }
 
-        /* ---------- Panel / Tarama şeridi ---------- */
-        .panel { padding: 18px 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
-        .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 14px; }
-        .panel-title { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text); }
-        .panel-sub { font-size: 12px; color: var(--muted); }
+        /* ---------- Panels / Tape / Insights ---------- */
+        .panel {
+            padding: 18px 20px; background: var(--bg-card);
+            border: 1px solid var(--line); border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        .panel-head {
+            display: flex; justify-content: space-between; align-items: baseline;
+            gap: 10px; margin-bottom: 12px;
+        }
+        .panel-title { font-size: 14.5px; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
+        .panel-sub { font-size: 11.5px; color: var(--text-muted); font-family: var(--mono); }
 
-        .tape { display: flex; align-items: flex-end; gap: 3px; height: 62px; padding: 0 2px; border-bottom: 1px solid var(--line); }
-        .tick { flex: 1; min-width: 3px; height: var(--h, 30%); padding: 0; border: 0; border-radius: 2px 2px 0 0; background: var(--safe); opacity: 0.55; transition: opacity 0.12s, transform 0.12s; }
-        .tick.blocked { background: var(--danger); opacity: 0.9; }
-        .tick.suspicious { background: var(--warning); opacity: 0.85; }
-        .tick:hover { opacity: 1; transform: scaleY(1.06); }
-        .tape-empty { align-self: center; width: 100%; text-align: center; font-size: 13px; color: var(--muted); }
-        .tape-legend { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11.5px; color: var(--muted); font-family: var(--mono); }
+        /* Scan Tape */
+        .tape {
+            display: flex; align-items: flex-end; gap: 3px; height: 58px;
+            padding: 0 2px; border-bottom: 1px solid var(--line);
+        }
+        .tick {
+            flex: 1; min-width: 3px; height: var(--h, 30%); padding: 0; border: 0;
+            border-radius: 2px 2px 0 0; background: var(--safe); opacity: 0.55;
+            transition: opacity 0.12s, transform 0.12s;
+        }
+        .tick.blocked { background: var(--danger); opacity: 0.95; box-shadow: 0 0 6px var(--danger-glow); }
+        .tick.suspicious { background: var(--warning); opacity: 0.9; }
+        .tick:hover { opacity: 1; transform: scaleY(1.1); }
+        .tape-empty { align-self: center; width: 100%; text-align: center; font-size: 12.5px; color: var(--text-muted); }
+        .tape-legend {
+            display: flex; justify-content: space-between; margin-top: 6px;
+            font-size: 11px; color: var(--text-muted); font-family: var(--mono);
+        }
 
-        .insights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 18px 0 26px; }
+        .insights { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 18px 0 22px; }
         .rank { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-        .rank li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; font-size: 13px; }
-        .rank .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); font-family: var(--mono); font-size: 12.5px; }
-        .rank .num { font-family: var(--mono); color: var(--muted); font-size: 12.5px; }
-        .rank .bar { grid-column: 1 / -1; }
+        .rank li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; }
+        .rank .name {
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            color: var(--text-sub); font-family: var(--mono); font-size: 12px;
+        }
+        .rank .num { font-family: var(--mono); color: var(--text-muted); font-size: 12px; }
+        .rank .bar { grid-column: 1 / -1; height: 3px; }
         .rank .bar > b { background: var(--danger); }
-        .rank-empty { font-size: 13px; color: var(--muted); }
+        .rank-empty { font-size: 12.5px; color: var(--text-muted); }
 
-        /* ---------- Filtreler ---------- */
-        .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+        /* ---------- Controls & Filter ---------- */
+        .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
         .controls .grow { flex: 1 1 260px; }
-        input[type="text"], select { padding: 10px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; color: var(--text); }
+        input[type="text"], select {
+            padding: 9px 12px; background: var(--bg-card);
+            border: 1px solid var(--line); border-radius: 6px; color: var(--text-main);
+        }
         input[type="text"] { width: 100%; }
-        input::placeholder { color: var(--muted); }
+        input::placeholder { color: var(--text-muted); }
         select { min-width: 170px; }
-        .result-info { margin: 0 0 8px; font-size: 12.5px; color: var(--muted); font-family: var(--mono); }
+        .result-info { margin: 0 0 8px; font-size: 12px; color: var(--text-muted); font-family: var(--mono); }
 
-        /* ---------- Tablo ---------- */
-        .table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+        /* ---------- Logs Table ---------- */
+        .table-wrap {
+            overflow-x: auto; background: var(--bg-card);
+            border: 1px solid var(--line); border-radius: 8px;
+        }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 13px 16px; text-align: left; border-bottom: 1px solid var(--line-soft); font-size: 14px; vertical-align: top; }
-        th { background: var(--panel-2); color: var(--muted); font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; white-space: nowrap; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.04); font-size: 13.5px; vertical-align: top; }
+        th {
+            background: rgba(22, 27, 36, 0.9); color: var(--text-muted);
+            font-size: 11px; font-weight: 700; letter-spacing: 0.14em; white-space: nowrap;
+        }
         th.sortable { cursor: pointer; user-select: none; }
-        th.sortable:hover { color: var(--text); }
+        th.sortable:hover { color: var(--text-main); }
         tbody tr:last-child td { border-bottom: 0; }
         tbody tr.log-row { cursor: pointer; transition: background 0.15s; }
-        tbody tr.log-row:hover { background: var(--panel-2); }
+        tbody tr.log-row:hover { background: rgba(255, 255, 255, 0.03); }
         tbody tr.log-row td:first-child { box-shadow: inset 3px 0 0 var(--safe); }
         tbody tr.log-row.is-blocked td:first-child { box-shadow: inset 3px 0 0 var(--danger); }
         tbody tr.log-row.is-suspicious td:first-child { box-shadow: inset 3px 0 0 var(--warning); }
-        .empty-row { text-align: center !important; color: var(--muted); padding: 30px 16px !important; }
+        .empty-row { text-align: center !important; color: var(--text-muted); padding: 30px 16px !important; }
 
-        .c-time .t-main { display: block; font-family: var(--mono); font-size: 14px; color: var(--text); }
-        .c-time .t-sub { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
-        .url-cell { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 13px; color: var(--brass); }
+        .c-time .t-main { display: block; font-family: var(--mono); font-size: 13.5px; color: var(--text-main); }
+        .c-time .t-sub { display: block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+        .url-cell {
+            max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            font-family: var(--mono); font-size: 12.5px; color: var(--gold);
+        }
         tr.log-row:hover .url-cell { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
-        .score-box { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
-        .sc { display: inline-flex; align-items: center; gap: 6px; }
-        .meter { display: inline-block; width: 46px; height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
-        .meter > b { display: block; height: 100%; background: var(--brass-dim); }
+        .score-box {
+            display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px;
+            font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+        }
+        .sc { display: inline-flex; align-items: center; gap: 5px; }
+        .meter { display: inline-block; width: 40px; height: 4px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; overflow: hidden; }
+        .meter > b { display: block; height: 100%; background: var(--line-light); }
         .meter.hot > b { background: var(--danger); }
-        .reason { font-weight: 500; margin-bottom: 5px; }
-        .tag { display: inline-block; padding: 2px 8px; font-size: 11px; color: var(--brass); background: var(--bg); border: 1px solid var(--line); border-radius: 3px; }
-        .type-tag { margin-left: 6px; color: var(--text-2); }
+        .reason { font-weight: 500; font-size: 13px; margin-bottom: 4px; color: #fff; }
+        .mitre-pill {
+            display: inline-block; padding: 2px 7px; font-size: 10.5px; font-family: var(--mono);
+            color: var(--cyan); background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 4px;
+        }
 
-        .badge, .stamp { display: inline-block; padding: 3px 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; border: 1.5px solid; border-radius: 3px; white-space: nowrap; }
-        .badge.blocked, .stamp.blocked { color: var(--danger); border-color: var(--danger); background: var(--danger-bg); }
-        .badge.suspicious, .stamp.suspicious { color: var(--warning); border-color: var(--warning); background: var(--warning-bg); }
-        .badge.safe, .stamp.safe { color: var(--safe); border-color: var(--safe); background: var(--safe-bg); }
+        .badge {
+            display: inline-block; padding: 3px 9px; font-size: 10.5px; font-weight: 700;
+            letter-spacing: 0.12em; border: 1.5px solid; border-radius: 4px; white-space: nowrap;
+        }
+        .badge.blocked { color: var(--danger); border-color: rgba(239, 68, 68, 0.5); background: var(--danger-glow); }
+        .badge.suspicious { color: var(--warning); border-color: rgba(245, 158, 11, 0.5); background: var(--warning-glow); }
+        .badge.safe { color: var(--safe); border-color: rgba(16, 185, 129, 0.5); background: var(--safe-glow); }
 
-        .more-wrap { display: flex; justify-content: center; padding: 16px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.25s ease-out; }
 
-        /* ---------- Beyaz liste ---------- */
-        .section-title { margin-bottom: 6px; font-family: var(--serif); font-size: 20px; font-weight: 600; }
-        .section-title.safe { color: var(--safe); }
-        .section-title.danger { color: var(--danger); }
-        .section-desc { margin-bottom: 16px; font-size: 13px; color: var(--muted); }
-        .inline-form { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-        .inline-form input { flex: 1 1 260px; width: auto; }
-        .mono-safe { color: var(--safe); font-family: var(--mono); }
-        .mono-danger { color: var(--danger); font-family: var(--mono); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-        .footnote { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--line-soft); font-size: 12px; color: var(--muted); }
-
-        /* ---------- Modal ---------- */
-        .modal { display: none; position: fixed; inset: 0; z-index: 1000; align-items: center; justify-content: center; padding: 20px; background: rgba(12, 11, 8, 0.78); backdrop-filter: blur(3px); }
+        /* ---------- Modals & Toasts ---------- */
+        .modal {
+            display: none; position: fixed; inset: 0; z-index: 1000;
+            align-items: center; justify-content: center; padding: 20px;
+            background: rgba(8, 9, 12, 0.85); backdrop-filter: blur(6px);
+        }
         .modal.open { display: flex; }
-        .modal-content { position: relative; width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; padding: 28px 30px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--brass-dim); border-radius: 8px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55); animation: rise 0.22s ease-out; }
-        .modal-content.small { max-width: 440px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
-        .modal-header h2 { font-family: var(--serif); font-size: 20px; font-weight: 600; color: var(--text); }
-        .close-btn { background: none; border: 0; color: var(--muted); font-size: 26px; line-height: 1; }
-        .close-btn:hover { color: var(--text); }
-        .modal-body p { font-size: 14px; color: var(--text-2); }
-        .case-stamp { margin: 0 0 16px; }
-        .case-stamp .stamp { font-size: 13px; padding: 5px 14px; transform: rotate(-2deg); }
-        .dl { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 0; }
-        .dl dt, .dl dd { padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
-        .dl dt { color: var(--muted); font-weight: 600; }
-        .dl dd { color: var(--text); word-break: break-all; }
-        .dl dd.link { color: var(--brass); font-family: var(--mono); font-size: 13px; }
-        .mini-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-        .mini-btn { padding: 3px 10px; font-size: 12px; background: transparent; border: 1px solid var(--line); border-radius: 4px; color: var(--text-2); }
-        .mini-btn:hover { border-color: var(--brass-dim); color: var(--brass); }
-        .big-scores { display: grid; gap: 8px; }
-        .big-scores .row { display: grid; grid-template-columns: 60px 1fr 34px; gap: 10px; align-items: center; font-family: var(--mono); font-size: 12.5px; }
-        .big-scores .meter { width: 100%; height: 6px; }
-        .modal-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
-        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .modal-content {
+            position: relative; width: 100%; max-width: 640px; max-height: 92vh;
+            overflow-y: auto; padding: 26px 28px; background: var(--bg-panel);
+            border: 1px solid var(--line); border-top: 3px solid var(--gold);
+            border-radius: 10px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+            animation: riseModal 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+        .modal-header h2 { font-family: var(--serif); font-size: 20px; color: #fff; }
+        .close-btn { background: none; border: 0; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+        .close-btn:hover { color: #fff; }
 
-        /* ---------- Bildirimler ---------- */
+        .dl { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 0; }
+        .dl dt, .dl dd { padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 13.5px; }
+        .dl dt { color: var(--text-muted); font-weight: 600; }
+        .dl dd { color: #fff; word-break: break-all; }
+        .dl dd.link { color: var(--gold); font-family: var(--mono); font-size: 12.5px; }
+
         #toasts { position: fixed; right: 20px; bottom: 20px; z-index: 1200; display: flex; flex-direction: column; gap: 8px; }
-        .toast { max-width: 360px; padding: 11px 16px; font-size: 13.5px; background: var(--panel-2); border: 1px solid var(--line); border-left: 3px solid var(--safe); border-radius: 5px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); animation: rise 0.2s ease-out; transition: opacity 0.3s; }
+        .toast {
+            max-width: 360px; padding: 11px 16px; font-size: 13px;
+            background: var(--bg-card); border: 1px solid var(--line); border-left: 3px solid var(--safe);
+            border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); animation: riseModal 0.2s ease-out;
+            transition: opacity 0.3s;
+        }
         .toast.error { border-left-color: var(--danger); }
-        .toast.info { border-left-color: var(--brass); }
+        .toast.info { border-left-color: var(--gold); }
         .toast.out { opacity: 0; }
 
-        @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-        @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+        @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+        @keyframes pulseCritical { 0%, 100% { border-color: rgba(239, 68, 68, 0.5); } 50% { border-color: rgba(239, 68, 68, 0.9); } }
+        @keyframes riseModal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* ---------- Dar ekran ---------- */
-        @media (max-width: 960px) {
+        @media (max-width: 1024px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
             .shell { grid-template-columns: 1fr; }
-            .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px; padding: 14px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
-            .brand { padding: 0; border: 0; }
-            .nav { flex-direction: row; flex-wrap: wrap; flex: 1; }
-            .live-box { margin-top: 0; }
-            .hint { display: none; }
-            .main { padding: 22px 16px 40px; }
-            .stats, .insights { grid-template-columns: 1fr; }
+            .side { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+            .main { padding: 20px 16px 40px; }
+            .insights { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 <div class="shell">
 
-    <!-- YAN PANEL -->
+    <!-- SIDEBAR -->
     <aside class="side">
         <div class="brand">
-            <svg width="34" height="38" viewBox="0 0 34 38" fill="none" stroke="#c2a66b" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
-                <path d="M17 2 3 7v10c0 9 6 16.5 14 19 8-2.5 14-10 14-19V7L17 2z"/>
-                <circle cx="16" cy="17" r="5.5"/>
-                <path d="m20 21 5 5" stroke-linecap="round"/>
-            </svg>
+            <div class="brand-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c4a76c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                </svg>
+            </div>
             <div>
-                <span class="brand-kicker">VAKA DOSYASI</span>
-                <strong id="caseId">AG-00000000</strong>
+                <span class="brand-kicker" data-i18n="caseFile">CASE FILE</span>
+                <strong id="caseId">AG-20261030</strong>
             </div>
         </div>
 
-        <nav class="nav" role="tablist" aria-label="Bölümler">
+        <nav class="nav" role="tablist">
             <button class="nav-btn active" role="tab" aria-selected="true" onclick="switchTab('logsTab', this)">
-                <span>📊 Canlı Tarama Logları</span><span class="nav-count" id="navLogs">0</span>
+                <span data-i18n="navLogs">📊 Live Incident Stream</span><span class="nav-count" id="navLogs">0</span>
             </button>
             <button class="nav-btn" role="tab" aria-selected="false" onclick="switchTab('whiteTab', this)">
-                <span>✅ Beyaz Liste (Güvenli Alanlar)</span><span class="nav-count" id="navWhite">–</span>
+                <span data-i18n="navWhite">✅ Verified Whitelist</span><span class="nav-count" id="navWhite">–</span>
             </button>
             <button class="nav-btn" role="tab" aria-selected="false" onclick="switchTab('blackTab', this)">
-                <span>🚨 Kara Liste Kuralları (Engellenenler)</span><span class="nav-count" id="navBlack">0</span>
+                <span data-i18n="navBlack">🚨 Threat Ledger</span><span class="nav-count" id="navBlack">0</span>
             </button>
         </nav>
 
+        <div class="side-controls">
+            <button class="side-ctrl-btn" id="audioToggleBtn" onclick="toggleAudio()" title="Sound Effects">
+                <span id="audioIcon">🔊</span> <span id="audioText">Audio: ON</span>
+            </button>
+        </div>
+
         <div class="live-box" id="liveBox">
-            <div class="live-pill"><span class="live-dot"></span><span id="liveText">CANLI</span></div>
-            <div class="live-meta" id="lastUpdate">Son güncelleme: –</div>
-            <button class="live-btn" id="liveBtn" onclick="toggleLive()">Akışı Duraklat</button>
-            <p class="hint"><kbd>/</kbd> ara &nbsp; <kbd>Esc</kbd> kapat</p>
+            <div class="live-pill">
+                <div class="live-dot-wrap">
+                    <span class="live-dot"></span>
+                    <span id="liveText">CANLI (WS)</span>
+                </div>
+                <span id="liveProtocol" style="font-family: var(--mono); font-size: 10px; color: var(--gold);">WEBSOCKET</span>
+            </div>
+            <div class="live-meta" id="lastUpdate">Updated: –</div>
+            <button class="live-btn" id="liveBtn" onclick="toggleLive()" data-i18n="pauseStream">Pause Stream</button>
         </div>
     </aside>
 
-    <!-- ANA ALAN -->
+    <!-- MAIN AREA -->
     <main class="main">
         <div class="header">
-            <div>
-                <div class="kicker">ADLİ BİLİŞİM İZLEME MERKEZİ</div>
-                <h1>🛡️ Adli Güvenlik SOC Dashboard</h1>
+            <div class="header-titles">
+                <div class="kicker" data-i18n="socKicker">CYBER DEFENSE OPERATIONS CENTER</div>
+                <h1 data-i18n="socTitle">🛡️ AntiGravity SOC Intelligence Console</h1>
             </div>
             <div class="header-btns">
-                <button class="btn btn-report" onclick="exportReport()">📋 Adli Rapor İndir (JSON)</button>
-                <button class="btn" onclick="exportCsv()">📑 CSV İndir</button>
-                <button class="btn btn-danger" onclick="clearLogsConfirm()">🗑️ Logları Sıfırla</button>
+                <!-- Bilingual Language Switcher -->
+                <div class="lang-switch" role="group" aria-label="Language Switcher">
+                    <button class="lang-btn" id="btnLangTR" onclick="setLanguage('tr')">🇹🇷 TR</button>
+                    <button class="lang-btn active" id="btnLangEN" onclick="setLanguage('en')">🇬🇧 EN</button>
+                </div>
+
+                <button class="btn btn-report" onclick="exportReport()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span data-i18n="btnJsonReport">Forensic Dossier (JSON)</span>
+                </button>
+                <button class="btn" onclick="exportCsv()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span data-i18n="btnCsv">CSV Export</span>
+                </button>
+                <button class="btn btn-danger" onclick="clearLogsConfirm()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    <span data-i18n="btnClear">Purge Logs</span>
+                </button>
             </div>
         </div>
 
-        <!-- 1. SEKME: LOGLAR -->
+        <!-- DEFCON Threat Condition Banner -->
+        <div class="defcon-banner level-normal" id="defconBanner">
+            <div class="defcon-badge" id="defconBadge">
+                <span>🛡️ DEFCON 5: NORMAL</span>
+            </div>
+            <div class="defcon-text" id="defconText">Zero-Trust perimeter stable. No abnormal zero-day spikes detected.</div>
+            <div class="defcon-meta" id="defconMeta">THREAT RATIO: 0.0%</div>
+        </div>
+
+        <!-- 3D CYBER THREAT RADAR & GLOBE CANVAS -->
+        <div class="visualizer-card">
+            <div class="visualizer-head">
+                <div class="visualizer-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+                    <span data-i18n="globeTitle">3D Global Threat Radar & Telemetry Hemisphere</span>
+                </div>
+                <div style="font-family: var(--mono); font-size: 11px; color: var(--gold);">
+                    <span data-i18n="interactiveDrag">[Drag with mouse to rotate 3D mesh]</span>
+                </div>
+            </div>
+            <div class="canvas-container">
+                <canvas id="globeCanvas"></canvas>
+                <div class="radar-hud">
+                    <div>SCANNER: 3D_VECTOR_ACTIVE</div>
+                    <div id="hudBeacons">BEACONS: 0 THREATS</div>
+                    <div id="hudEngine">AI_ENGINE: 22_FEATURES</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 1: LOGS & MONITOR -->
         <section id="logsTab" class="tab-content active">
+            <!-- 3D Tilt Stats Cards -->
             <div class="stats">
-                <div class="card total">
-                    <p>TOPLAM TARAMA</p><h3 id="total-count">0</h3>
-                    <div class="ratio"><span>tüm kayıtlar</span></div>
+                <div class="card total" id="cardTotal">
+                    <div class="card-label" data-i18n="statTotal">TOTAL INSPECTED</div>
+                    <h3 id="total-count">0</h3>
+                    <div class="ratio"><span data-i18n="statTotalSub">all network requests</span></div>
                 </div>
-                <div class="card safe">
-                    <p>GÜVENLİ BULUNAN</p><h3 id="safe-count">0</h3>
-                    <div class="ratio"><div class="bar"><b id="safeBar"></b></div><span id="safePct">%0</span></div>
+                <div class="card safe" id="cardSafe">
+                    <div class="card-label" data-i18n="statSafe">VERIFIED BENIGN</div>
+                    <h3 id="safe-count">0</h3>
+                    <div class="ratio"><div class="bar"><b id="safeBar"></b></div><span id="safePct">0%</span></div>
                 </div>
-                <div class="card blocked">
-                    <p>ENGELLENEN TEHDİT</p><h3 id="blocked-count">0</h3>
-                    <div class="ratio"><div class="bar"><b id="blockedBar"></b></div><span id="blockedPct">%0</span></div>
+                <div class="card blocked" id="cardBlocked">
+                    <div class="card-label" data-i18n="statBlocked">NEUTRALIZED THREATS</div>
+                    <h3 id="blocked-count">0</h3>
+                    <div class="ratio"><div class="bar"><b id="blockedBar"></b></div><span id="blockedPct">0%</span></div>
+                </div>
+                <div class="card threat-rate" id="cardRate">
+                    <div class="card-label" data-i18n="statThreatRate">THREAT SEVERITY INDEX</div>
+                    <h3 id="threatRateVal">0.0%</h3>
+                    <div class="ratio"><div class="bar"><b id="threatBar"></b></div><span id="threatLevelText">STABLE</span></div>
                 </div>
             </div>
 
-            <div class="panel">
+            <!-- Tape -->
+            <div class="panel" style="margin-bottom: 20px;">
                 <div class="panel-head">
-                    <span class="panel-title">Tarama Şeridi</span>
-                    <span class="panel-sub">son 80 tarama · kırmızı = engellenen, sarı = şüpheli · tıkla: detay</span>
+                    <span class="panel-title" data-i18n="tapeTitle">Chronological Event Timeline</span>
+                    <span class="panel-sub" data-i18n="tapeSub">latest 80 events · green=safe, red=blocked, amber=suspicious</span>
                 </div>
                 <div class="tape" id="tape"></div>
-                <div class="tape-legend"><span>← eski</span><span>yeni →</span></div>
+                <div class="tape-legend">
+                    <span data-i18n="tapeOld">← Older Traffic</span>
+                    <span data-i18n="tapeNew">Real-Time Ingestion →</span>
+                </div>
             </div>
 
+            <!-- Insights (MITRE + Domains) -->
             <div class="insights">
                 <div class="panel">
-                    <div class="panel-head"><span class="panel-title">Tehdit Türleri</span><span class="panel-sub">engellenenler ve şüpheliler</span></div>
+                    <div class="panel-head">
+                        <span class="panel-title" data-i18n="threatTypes">Attack Vectors & MITRE ATT&CK Tactics</span>
+                    </div>
                     <ul class="rank" id="typeRank"></ul>
                 </div>
                 <div class="panel">
-                    <div class="panel-head"><span class="panel-title">En Çok Engellenen / Şüpheli Alanlar</span><span class="panel-sub">ilk 6</span></div>
+                    <div class="panel-head">
+                        <span class="panel-title" data-i18n="topThreatDomains">Top Intercepted Malicious Domains</span>
+                    </div>
                     <ul class="rank" id="domainRank"></ul>
                 </div>
             </div>
 
+            <!-- Table Controls -->
             <div class="controls">
-                <div class="grow"><input type="text" id="searchInput" placeholder="🔍 URL veya sebep ara..." onkeyup="filterLogs()" autocomplete="off"></div>
-                <select id="statusFilter" onchange="filterLogs()" aria-label="Durum filtresi">
-                    <option value="all">Tüm Durumlar</option>
-                    <option value="blocked">Engellenenler</option>
-                    <option value="suspicious">Şüpheliler</option>
-                    <option value="safe">Güvenliler</option>
+                <div class="grow">
+                    <input type="text" id="searchInput" placeholder="🔍 Search URLs, domains, MITRE tactics..." onkeyup="filterLogs()" autocomplete="off">
+                </div>
+                <select id="statusFilter" onchange="filterLogs()" aria-label="Status filter">
+                    <option value="all">All Verdicts</option>
+                    <option value="blocked">Blocked (Hard Shield)</option>
+                    <option value="suspicious">Suspicious (Warning Toast)</option>
+                    <option value="safe">Clean (Allow)</option>
                 </select>
-                <select id="typeFilter" onchange="filterLogs()" aria-label="Tür filtresi">
-                    <option value="all">Tüm Türler</option>
-                    <option value="explicit">Cinsel İçerik</option>
-                    <option value="phishing">Oltalama / Zararlı URL</option>
-                    <option value="gambling">Bahis / Kumar</option>
-                    <option value="other">Diğer</option>
+                <select id="typeFilter" onchange="filterLogs()" aria-label="Type filter">
+                    <option value="all">All Attack Vectors</option>
+                    <option value="phishing">Phishing / Brand Spoofing</option>
+                    <option value="explicit">Explicit Policy</option>
+                    <option value="gambling">Illegal Gambling</option>
+                    <option value="other">Other Heuristics</option>
                 </select>
             </div>
             <p class="result-info" id="resultInfo"></p>
@@ -370,72 +650,74 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="sortable" id="sortTime" onclick="toggleSort()" title="Sıralamayı değiştir">TARİH/SAAT ↓</th>
-                            <th>URL VE SKORLAR (Detay için tıkla)</th>
-                            <th>TESPİT SEBEBİ</th>
-                            <th>DURUM</th>
+                            <th class="sortable" id="sortTime" onclick="toggleSort()" data-i18n="thTime">TIMESTAMP ↓</th>
+                            <th data-i18n="thUrl">TARGET URL & SCORES (Click for Dossier)</th>
+                            <th data-i18n="thReason">DETECTION VECTOR & MITRE TAXONOMY</th>
+                            <th data-i18n="thStatus">VERDICT</th>
                         </tr>
                     </thead>
                     <tbody id="logs-table">
-                        <tr><td colspan="4" class="empty-row">Yükleniyor...</td></tr>
+                        <tr><td colspan="4" class="empty-row" data-i18n="loading">Ingesting telemetry...</td></tr>
                     </tbody>
                 </table>
             </div>
-            <div class="more-wrap" id="moreWrap" style="display:none;">
-                <button class="btn" onclick="showMore()" id="moreBtn">Daha fazla göster</button>
+            <div class="more-wrap" id="moreWrap" style="display:none; text-align: center; padding: 14px;">
+                <button class="btn" onclick="showMore()" id="moreBtn" data-i18n="btnShowMore">Load More Telemetry</button>
             </div>
         </section>
 
-        <!-- 2. SEKME: BEYAZ LİSTE -->
+        <!-- TAB 2: WHITELIST -->
         <section id="whiteTab" class="tab-content">
-            <h2 class="section-title safe">✨ Beyaz Listeye Eklenmiş Güvenli Alan Adları</h2>
-            <p class="section-desc">Bu alan adları taramadan muaf tutulur. Yalnızca güvendiğiniz alanları ekleyin.</p>
-            <div class="inline-form">
-                <input type="text" id="whiteInput" placeholder="ornek.com" autocomplete="off" onkeydown="if(event.key==='Enter') addWhitelistManual()">
-                <button class="btn btn-primary" onclick="addWhitelistManual()">+ Alan Adı Ekle</button>
+            <h2 class="panel-title" style="font-size: 18px; margin-bottom: 6px; color: var(--safe);" data-i18n="whiteTitle">✨ Verified Whitelist Management</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;" data-i18n="whiteSub">Domains added here bypass the AI scoring engine entirely. Add only trusted operator domains.</p>
+            <div class="controls" style="margin-bottom: 16px;">
+                <input type="text" id="whiteInput" placeholder="example.com" style="max-width: 340px;" onkeydown="if(event.key==='Enter') addWhitelistManual()">
+                <button class="btn btn-primary" onclick="addWhitelistManual()" data-i18n="btnAddDomain">+ Add Verified Domain</button>
             </div>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>ID</th><th>ALAN ADI (DOMAIN)</th><th>İŞLEM</th></tr></thead>
+                    <thead><tr><th>ID</th><th data-i18n="thDomain">DOMAIN</th><th data-i18n="thAction">ACTION</th></tr></thead>
                     <tbody id="whitelist-table">
-                        <tr><td colspan="3" class="empty-row">Yükleniyor...</td></tr>
+                        <tr><td colspan="3" class="empty-row" data-i18n="loading">Loading whitelist...</td></tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- 3. SEKME: KARA LİSTE -->
+        <!-- TAB 3: BLACKLIST / THREAT LEDGER -->
         <section id="blackTab" class="tab-content">
-            <h2 class="section-title danger">🚨 Aktif Engellenen Tehdit Logları (Kara Liste Geçmişi)</h2>
-            <p class="section-desc">Engellenen son kayıtlar. Ayrıntı için satıra tıklayın.</p>
+            <h2 class="panel-title" style="font-size: 18px; margin-bottom: 6px; color: var(--danger);" data-i18n="blackTitle">🚨 Active Threat Ledger & Interceptions</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;" data-i18n="blackSub">Complete ledger of blocked attacks, malicious anchors, and quarantined HTML artifacts.</p>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>TARİH/SAAT</th><th>TEHDİT URL</th><th>ENGELLEME SEBEBİ</th><th>TESPİT EDEN</th></tr></thead>
+                    <thead><tr><th data-i18n="thTime">TIMESTAMP</th><th data-i18n="thUrl">TARGET THREAT URL</th><th data-i18n="thReason">BLOCK VECTOR</th><th data-i18n="thDetector">DETECTOR</th></tr></thead>
                     <tbody id="blacklist-table">
-                        <tr><td colspan="4" class="empty-row">Engellenen tehdit bulunmuyor.</td></tr>
+                        <tr><td colspan="4" class="empty-row" data-i18n="noThreats">No threats intercepted in this session.</td></tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <p class="footnote">Veriler yalnızca bu bilgisayarda (127.0.0.1) tutulur. Engellenen adresleri tarayıcıda açmayın; kopyalamak için “Güvenli kopyala” kullanın.</p>
+        <p style="margin-top: 30px; font-size: 11.5px; color: var(--text-muted); font-family: var(--mono);" data-i18n="footnote">
+            SECURE LOCAL LOGGING: All telemetry is preserved strictly on 127.0.0.1. URLs are automatically defanged for analyst safety.
+        </p>
     </main>
 </div>
 
-<!-- DETAY PENCERESİ -->
+<!-- INCIDENT DOSSIER MODAL -->
 <div id="detailModal" class="modal" onclick="if(event.target===this) closeModal()">
-    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content" role="dialog" aria-modal="true">
         <div class="modal-header">
-            <h2 id="modalTitle">🔍 Adli İşlem Detayı</h2>
-            <button class="close-btn" onclick="closeModal()" aria-label="Kapat">&times;</button>
+            <h2 id="modalTitle">🔍 Forensic Incident Dossier</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
-        <div class="modal-body" id="modalBody"></div>
-        <div class="modal-footer">
-            <div class="btn-row">
-                <button id="whitelistBtn" class="btn btn-warning">✨ Beyaz Listeye Ekle</button>
-                <a id="downloadBtn" href="#" target="_blank" class="btn btn-primary" style="display:none;">📥 HTML Kanıt İndir</a>
+        <div id="modalBody"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 8px;">
+                <button id="whitelistBtn" class="btn" style="border-color: var(--gold); color: var(--gold);">✨ Add to Whitelist</button>
+                <a id="downloadBtn" href="#" target="_blank" class="btn btn-primary" style="display:none;">📥 Download HTML Evidence</a>
             </div>
-            <button class="btn btn-secondary" onclick="closeModal()">Kapat</button>
+            <button class="btn btn-secondary" onclick="closeModal()" data-i18n="btnClose">Close</button>
         </div>
     </div>
 </div>
@@ -443,9 +725,445 @@
 <div id="toasts" aria-live="polite"></div>
 
 <script>
+    /* ==============================================================
+       1. BILINGUAL I18N DICTIONARY (EN 🇬🇧 & TR 🇹🇷)
+       ============================================================== */
+    const I18N = {
+        en: {
+            caseFile: "CASE FILE",
+            navLogs: "📊 Live Incident Stream",
+            navWhite: "✅ Verified Whitelist",
+            navBlack: "🚨 Threat Ledger",
+            pauseStream: "Pause Stream",
+            resumeStream: "Resume Stream",
+            socKicker: "CYBER DEFENSE OPERATIONS CENTER",
+            socTitle: "🛡️ AntiGravity SOC Intelligence Console",
+            btnJsonReport: "Forensic Dossier (JSON)",
+            btnCsv: "CSV Export",
+            btnClear: "Purge Logs",
+            globeTitle: "3D Global Threat Radar & Telemetry Hemisphere",
+            interactiveDrag: "[Drag with mouse to rotate 3D mesh]",
+            statTotal: "TOTAL INSPECTED",
+            statTotalSub: "all network requests",
+            statSafe: "VERIFIED BENIGN",
+            statBlocked: "NEUTRALIZED THREATS",
+            statThreatRate: "THREAT SEVERITY INDEX",
+            tapeTitle: "Chronological Event Timeline",
+            tapeSub: "latest 80 events · green=safe, red=blocked, amber=suspicious",
+            tapeOld: "← Older Traffic",
+            tapeNew: "Real-Time Ingestion →",
+            threatTypes: "Attack Vectors & MITRE ATT&CK Tactics",
+            topThreatDomains: "Top Intercepted Malicious Domains",
+            thTime: "TIMESTAMP ↓",
+            thUrl: "TARGET URL & SCORES (Click for Dossier)",
+            thReason: "DETECTION VECTOR & MITRE TAXONOMY",
+            thStatus: "VERDICT",
+            loading: "Ingesting telemetry...",
+            btnShowMore: "Load More Telemetry",
+            whiteTitle: "✨ Verified Whitelist Management",
+            whiteSub: "Domains added here bypass the AI scoring engine entirely. Add only trusted operator domains.",
+            btnAddDomain: "+ Add Verified Domain",
+            thDomain: "DOMAIN",
+            thAction: "ACTION",
+            blackTitle: "🚨 Active Threat Ledger & Interceptions",
+            blackSub: "Complete ledger of blocked attacks, malicious anchors, and quarantined HTML artifacts.",
+            thDetector: "DETECTOR",
+            noThreats: "No threats intercepted in this session.",
+            footnote: "SECURE LOCAL LOGGING: All telemetry is preserved strictly on 127.0.0.1. URLs are automatically defanged for analyst safety.",
+            btnClose: "Close",
+            searchPlaceholder: "🔍 Search URLs, domains, MITRE tactics...",
+            statusFilterAll: "All Verdicts",
+            statusFilterBlocked: "Blocked (Hard Shield)",
+            statusFilterSuspicious: "Suspicious (Warning Toast)",
+            statusFilterSafe: "Clean (Allow)",
+            typeFilterAll: "All Attack Vectors",
+            typeFilterPhishing: "Phishing / Brand Spoofing",
+            typeFilterExplicit: "Explicit Policy",
+            typeFilterGambling: "Illegal Gambling",
+            typeFilterOther: "Other Heuristics",
+            dossierTitle: "🔍 Forensic Incident Dossier",
+            dossierUrl: "Target URL",
+            dossierVerdict: "Verdict",
+            dossierMitre: "MITRE ATT&CK",
+            dossierScore: "AI Threat Score",
+            dossierTime: "Timestamp",
+            dossierEvidence: "Forensic Evidence",
+            evidenceQuarantined: "Quarantined HTML Captured",
+            evidenceNone: "No DOM evidence required",
+            toastNewEvent: "New Event: ",
+            toastCleared: "All operational logs purged.",
+            toastAddedWhite: "added to whitelist.",
+            toastRemovedWhite: "removed from whitelist.",
+            defconNormal: "🛡️ DEFCON 5: NORMAL",
+            defconElevated: "⚠️ DEFCON 3: ELEVATED",
+            defconCritical: "🚨 DEFCON 1: CRITICAL ZERO-DAY INTERCEPTED",
+            defconTextNormal: "Zero-Trust perimeter stable. No abnormal attack spikes.",
+            defconTextElevated: "Elevated malicious links detected in network traffic.",
+            defconTextCritical: "Active credential harvesting or homograph attack in progress!"
+        },
+        tr: {
+            caseFile: "VAKA DOSYASI",
+            navLogs: "📊 Canlı Olay Akışı",
+            navWhite: "✅ Doğrulanmış Beyaz Liste",
+            navBlack: "🚨 Tehdit Kütüğü",
+            pauseStream: "Akışı Duraklat",
+            resumeStream: "Akışı Sürdür",
+            socKicker: "ADLİ BİLİŞİM & SİBER SAVUNMA MERKEZİ",
+            socTitle: "🛡️ AntiGravity SOC İstihbarat Konsolu",
+            btnJsonReport: "Adli Rapor İndir (JSON)",
+            btnCsv: "CSV Dışa Aktar",
+            btnClear: "Logları Sıfırla",
+            globeTitle: "3B Küresel Tehdit Radarı & Telemetri Küresi",
+            interactiveDrag: "[3B ağı döndürmek için fareyle sürükleyin]",
+            statTotal: "TOPLAM DENETLENEN",
+            statTotalSub: "tüm ağ trafiği",
+            statSafe: "GÜVENLİ ONAYLANAN",
+            statBlocked: "ENGELLENEN TEHDİTLER",
+            statThreatRate: "TEHDİT RİSK ENDEKSİ",
+            tapeTitle: "Kronolojik Olay Şeridi",
+            tapeSub: "son 80 olay · yeşil=güvenli, kırmızı=engellendi, sarı=şüpheli",
+            tapeOld: "← Eski Trafik",
+            tapeNew: "Gerçek Zamanlı Akış →",
+            threatTypes: "Saldırı Vektörleri & MITRE ATT&CK Taktiği",
+            topThreatDomains: "En Çok Engellenen Zararlı Alanlar",
+            thTime: "TARİH/SAAT ↓",
+            thUrl: "HEDEF URL VE SKORLAR (Detay için tıkla)",
+            thReason: "TESPİT VEKTÖRÜ & MITRE TAKSİONOMİSİ",
+            thStatus: "KARAR",
+            loading: "Telemetri yükleniyor...",
+            btnShowMore: "Daha Fazla Göster",
+            whiteTitle: "✨ Doğrulanmış Beyaz Liste Yönetimi",
+            whiteSub: "Bu alan adları yapay zeka denetimini tamamen atlar. Yalnızca güvendiğiniz alanları ekleyin.",
+            btnAddDomain: "+ Güvenli Alan Ekle",
+            thDomain: "ALAN ADI",
+            thAction: "İŞLEM",
+            blackTitle: "🚨 Aktif Engellenen Tehdit Kütüğü",
+            blackSub: "Engellenen saldırıların ve karantinaya alınan HTML kanıtlarının tam listesi.",
+            thDetector: "TESPİT EDEN",
+            noThreats: "Bu oturumda engellenen tehdit bulunmuyor.",
+            footnote: "GÜVENLİ YEREL GÜNLÜKLEME: Tüm telemetri yalnızca 127.0.0.1 üzerinde tutulur. URL'ler analist güvenliği için defang edilmiştir.",
+            btnClose: "Kapat",
+            searchPlaceholder: "🔍 URL, alan adı veya MITRE taktiği ara...",
+            statusFilterAll: "Tüm Kararlar",
+            statusFilterBlocked: "Engellenenler (Kalkan)",
+            statusFilterSuspicious: "Şüpheliler (Uyarı)",
+            statusFilterSafe: "Temiz (İzinli)",
+            typeFilterAll: "Tüm Saldırı Türleri",
+            typeFilterPhishing: "Oltalama / Sahte Marka",
+            typeFilterExplicit: "Yasaklı İçerik",
+            typeFilterGambling: "Yasadışı Bahis",
+            typeFilterOther: "Diğer Sezgisel",
+            dossierTitle: "🔍 Adli Olay Dosyası",
+            dossierUrl: "Hedef URL",
+            dossierVerdict: "Karar",
+            dossierMitre: "MITRE ATT&CK",
+            dossierScore: "Yapay Zeka Risk Skoru",
+            dossierTime: "Zaman Damgası",
+            dossierEvidence: "Adli Kanıt",
+            evidenceQuarantined: "Karantinaya Alınmış HTML Mevcut",
+            evidenceNone: "DOM kanıtı gerekmedi",
+            toastNewEvent: "Yeni Olay: ",
+            toastCleared: "Tüm operasyonel loglar temizlendi.",
+            toastAddedWhite: "beyaz listeye eklendi.",
+            toastRemovedWhite: "beyaz listeden çıkarıldı.",
+            defconNormal: "🛡️ DEFCON 5: NORMAL",
+            defconElevated: "⚠️ DEFCON 3: YÜKSEK TEHDİT",
+            defconCritical: "🚨 DEFCON 1: KRİTİK SIFIR-GÜN SALDIRISI",
+            defconTextNormal: "Sıfır-Güven savunma hattı stabil. Anormal saldırı tespit edilmedi.",
+            defconTextElevated: "Ağ trafiğinde şüpheli bağlantı artışı tespit edildi.",
+            defconTextCritical: "Aktif kimlik avı veya homograph saldırısı engellendi!"
+        }
+    };
+
+    let CURRENT_LANG = localStorage.getItem("ag_lang") || "en";
+
+    function setLanguage(lang) {
+        CURRENT_LANG = lang;
+        localStorage.setItem("ag_lang", lang);
+        document.documentElement.lang = lang;
+
+        document.getElementById("btnLangTR").classList.toggle("active", lang === "tr");
+        document.getElementById("btnLangEN").classList.toggle("active", lang === "en");
+
+        // Update all data-i18n elements
+        document.querySelectorAll("[data-i18n]").forEach(el => {
+            const key = el.getAttribute("data-i18n");
+            if (I18N[lang] && I18N[lang][key]) {
+                el.textContent = I18N[lang][key];
+            }
+        });
+
+        // Update inputs
+        document.getElementById("searchInput").placeholder = I18N[lang].searchPlaceholder;
+        updateSelectLabels();
+        renderAll();
+    }
+
+    function updateSelectLabels() {
+        const s = document.getElementById("statusFilter");
+        const t = document.getElementById("typeFilter");
+        const tr = CURRENT_LANG === "tr";
+        s.options[0].text = tr ? "Tüm Kararlar" : "All Verdicts";
+        s.options[1].text = tr ? "Engellenenler (Kalkan)" : "Blocked (Hard Shield)";
+        s.options[2].text = tr ? "Şüpheliler (Uyarı)" : "Suspicious (Warning Toast)";
+        s.options[3].text = tr ? "Temiz (İzinli)" : "Clean (Allow)";
+
+        t.options[0].text = tr ? "Tüm Saldırı Türleri" : "All Attack Vectors";
+        t.options[1].text = tr ? "Oltalama / Sahte Marka" : "Phishing / Brand Spoofing";
+        t.options[2].text = tr ? "Yasaklı İçerik" : "Explicit Policy";
+        t.options[3].text = tr ? "Yasadışı Bahis" : "Illegal Gambling";
+        t.options[4].text = tr ? "Diğer Sezgisel" : "Other Heuristics";
+    }
+
+    /* ==============================================================
+       2. TACTICAL SYNTHESIZED AUDIO (Web Audio API - Zero Asset)
+       ============================================================== */
+    let AUDIO_ENABLED = localStorage.getItem("ag_audio") !== "false";
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) audioCtx = new AudioContext();
+        }
+    }
+
+    function playTacticalSound(type = "alert") {
+        if (!AUDIO_ENABLED) return;
+        try {
+            initAudio();
+            if (!audioCtx) return;
+            if (audioCtx.state === "suspended") audioCtx.resume();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+            if (type === "block") {
+                // Cyber Defense Block (Two-tone alert)
+                osc.type = "sawtooth";
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.exponentialRampToValueAtTime(320, now + 0.18);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+                osc.start(now);
+                osc.stop(now + 0.22);
+            } else {
+                // High-tech subtle ping
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                gain.gain.setValueAtTime(0.04, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+        } catch(e) {}
+    }
+
+    function toggleAudio() {
+        AUDIO_ENABLED = !AUDIO_ENABLED;
+        localStorage.setItem("ag_audio", AUDIO_ENABLED);
+        document.getElementById("audioIcon").textContent = AUDIO_ENABLED ? "🔊" : "🔇";
+        document.getElementById("audioText").textContent = AUDIO_ENABLED ? "Audio: ON" : "Audio: MUTED";
+        document.getElementById("audioToggleBtn").classList.toggle("active", AUDIO_ENABLED);
+    }
+
+    /* ==============================================================
+       3. INTERACTIVE 3D CYBER THREAT GLOBE / RADAR CANVAS
+       ============================================================== */
+    const globeCanvas = document.getElementById("globeCanvas");
+    const gctx = globeCanvas.getContext("2d");
+    let rotX = 0.25;
+    let rotY = 0;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+    let threatBeacons = []; // 3D coordinates on sphere
+    let sweepAngle = 0;
+
+    function resizeGlobe() {
+        const rect = globeCanvas.parentElement.getBoundingClientRect();
+        globeCanvas.width = rect.width * window.devicePixelRatio;
+        globeCanvas.height = 210 * window.devicePixelRatio;
+    }
+    window.addEventListener("resize", resizeGlobe);
+
+    // Mouse drag rotation
+    globeCanvas.addEventListener("mousedown", e => {
+        isDragging = true;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+    });
+    window.addEventListener("mouseup", () => isDragging = false);
+    window.addEventListener("mousemove", e => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastMouseX;
+        const dy = e.clientY - lastMouseY;
+        rotY += dx * 0.008;
+        rotX += dy * 0.008;
+        rotX = Math.max(-1.2, Math.min(1.2, rotX));
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+    });
+
+    function project3D(x, y, z, cx, cy, radius) {
+        // Rotate around Y
+        const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+        let x1 = x * cosY - z * sinY;
+        let z1 = z * cosY + x * sinY;
+
+        // Rotate around X
+        const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+        let y2 = y * cosX - z1 * sinX;
+        let z2 = z1 * cosX + y * sinX;
+
+        const fov = 340;
+        const scale = fov / (fov + z2);
+        return {
+            x: cx + x1 * scale * radius,
+            y: cy + y2 * scale * radius,
+            z: z2,
+            visible: z2 > -radius * 0.45
+        };
+    }
+
+    function addThreatBeacon(isBlock) {
+        // Generate pseudo-random coordinates on sphere
+        const phi = Math.random() * Math.PI * 2;
+        const theta = (Math.random() - 0.5) * Math.PI * 0.8;
+        threatBeacons.push({
+            x: Math.cos(theta) * Math.cos(phi),
+            y: Math.sin(theta),
+            z: Math.cos(theta) * Math.sin(phi),
+            isBlock: isBlock,
+            born: Date.now(),
+            ringR: 0
+        });
+        if (threatBeacons.length > 25) threatBeacons.shift();
+        document.getElementById("hudBeacons").textContent = `BEACONS: ${threatBeacons.length} ACTIVE`;
+    }
+
+    function draw3DGlobe() {
+        const w = globeCanvas.width;
+        const h = globeCanvas.height;
+        gctx.clearRect(0, 0, w, h);
+
+        const cx = w / 2;
+        const cy = h / 2;
+        const R = Math.min(cx, cy) * 0.72;
+
+        if (!isDragging) rotY += 0.003;
+        sweepAngle = (sweepAngle + 0.02) % (Math.PI * 2);
+
+        // 1. Ambient Glow
+        const radGrad = gctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 1.1);
+        radGrad.addColorStop(0, "rgba(6, 182, 212, 0.08)");
+        radGrad.addColorStop(0.7, "rgba(196, 167, 108, 0.03)");
+        radGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        gctx.fillStyle = radGrad;
+        gctx.fillRect(0, 0, w, h);
+
+        // 2. Latitude Circles
+        const latSteps = 6;
+        for (let i = -latSteps + 1; i < latSteps; i++) {
+            const lat = (i / latSteps) * (Math.PI / 2);
+            const rLat = Math.cos(lat);
+            const yLat = Math.sin(lat);
+
+            gctx.beginPath();
+            let first = true;
+            for (let j = 0; j <= 36; j++) {
+                const lon = (j / 36) * Math.PI * 2;
+                const p = project3D(rLat * Math.cos(lon), yLat, rLat * Math.sin(lon), cx, cy, R);
+                if (first) { gctx.moveTo(p.x, p.y); first = false; }
+                else gctx.lineTo(p.x, p.y);
+            }
+            gctx.strokeStyle = i === 0 ? "rgba(196, 167, 108, 0.35)" : "rgba(6, 182, 212, 0.12)";
+            gctx.lineWidth = i === 0 ? 1.5 : 1;
+            gctx.stroke();
+        }
+
+        // 3. Longitude Meridians
+        const lonSteps = 8;
+        for (let i = 0; i < lonSteps; i++) {
+            const lon = (i / lonSteps) * Math.PI;
+            gctx.beginPath();
+            let first = true;
+            for (let j = 0; j <= 36; j++) {
+                const lat = (j / 36) * Math.PI * 2;
+                const p = project3D(Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon), cx, cy, R);
+                if (first) { gctx.moveTo(p.x, p.y); first = false; }
+                else gctx.lineTo(p.x, p.y);
+            }
+            gctx.strokeStyle = "rgba(6, 182, 212, 0.12)";
+            gctx.lineWidth = 1;
+            gctx.stroke();
+        }
+
+        // 4. Rotating Radar Sweep Beam
+        const sweepP = project3D(Math.cos(sweepAngle), 0, Math.sin(sweepAngle), cx, cy, R);
+        gctx.beginPath();
+        gctx.moveTo(cx, cy);
+        gctx.lineTo(sweepP.x, sweepP.y);
+        gctx.strokeStyle = "rgba(6, 182, 212, 0.45)";
+        gctx.lineWidth = 2;
+        gctx.stroke();
+
+        // 5. Threat Beacons with Expanding Waves
+        const now = Date.now();
+        threatBeacons.forEach(b => {
+            const p = project3D(b.x, b.y, b.z, cx, cy, R);
+            if (!p.visible) return;
+
+            const age = (now - b.born) / 1000;
+            const radiusPulse = (age * 12) % 20;
+            const alpha = Math.max(0, 1 - age / 8);
+
+            // Core dot
+            gctx.beginPath();
+            gctx.arc(p.x, p.y, b.isBlock ? 4.5 : 3, 0, Math.PI * 2);
+            gctx.fillStyle = b.isBlock ? `rgba(239, 68, 68, ${alpha})` : `rgba(16, 185, 129, ${alpha})`;
+            gctx.fill();
+
+            // Ripple ring
+            gctx.beginPath();
+            gctx.arc(p.x, p.y, radiusPulse, 0, Math.PI * 2);
+            gctx.strokeStyle = b.isBlock ? `rgba(239, 68, 68, ${alpha * 0.7})` : `rgba(16, 185, 129, ${alpha * 0.7})`;
+            gctx.lineWidth = 1.2;
+            gctx.stroke();
+        });
+
+        requestAnimationFrame(draw3DGlobe);
+    }
+
+    /* ==============================================================
+       4. 3D CARD TILT INTERACTION
+       ============================================================== */
+    function initCardTilt() {
+        document.querySelectorAll(".card").forEach(card => {
+            card.addEventListener("mousemove", e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const xc = rect.width / 2;
+                const yc = rect.height / 2;
+                const dx = (x - xc) / xc;
+                const dy = (y - yc) / yc;
+                card.style.transform = `perspective(800px) rotateX(${-dy * 6}deg) rotateY(${dx * 6}deg) translateY(-2px)`;
+            });
+            card.addEventListener("mouseleave", () => {
+                card.style.transform = "perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0px)";
+            });
+        });
+    }
+
+    /* ==============================================================
+       5. TELEMETRY, WEBSOCKETS & LOG ENGINE
+       ============================================================== */
     const API = location.protocol === 'file:' ? 'http://127.0.0.1:8001' : '';
     const PAGE_SIZE = 50;
-    const TYPE_LABELS = { explicit: 'Cinsel İçerik', phishing: 'Oltalama / Zararlı URL', gambling: 'Bahis / Kumar', other: 'Diğer' };
 
     let allLogs = [];
     let stats = { total: 0, safe: 0, blocked: 0 };
@@ -453,47 +1171,24 @@
     let sortDesc = true;
     let live = true;
     let lastSig = '';
+    let ws = null;
 
-    /* ---------- Yardımcılar ---------- */
     const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
     const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ESC[c]);
-    const pct = v => Math.max(0, Math.min(100, Number(v) || 0));
     const $ = id => document.getElementById(id);
 
     function getActionStatus(log) {
-        const st = String(log.action || log.status || log.durum || '').toUpperCase();
+        const st = String(log.action || log.status || '').toUpperCase();
         if (st === 'BLOCK' || st === 'ENGELLENDİ') return 'blocked';
         if (st === 'SUSPICIOUS' || st === 'ŞÜPHELİ') return 'suspicious';
         return 'safe';
     }
 
-    function isFake(log) { return getActionStatus(log) === 'blocked'; }
-    function fmtTime(log) { return log.time || String(log.timestamp || '').slice(11, 16) || '-'; }
-    function fmtDate(log) { return log.date || String(log.timestamp || '').slice(0, 10) || ''; }
-    function logReason(log) { return log.reason || log.details || '-'; }
-
-    function hostOf(url) {
-        try { return new URL(url).hostname || ''; } catch (e) { return ''; }
-    }
-    function normalizeDomain(value) {
-        let v = String(value || '').trim().toLowerCase();
-        if (!v) return '';
-        if (!/^[a-z][a-z0-9+.-]*:\/\//.test(v)) v = 'http://' + v;
-        try { return new URL(v).hostname; } catch (e) { return ''; }
-    }
     function defang(url) {
         try {
             const u = new URL(url);
-            return u.protocol.replace('http', 'hxxp') + '//' + u.host.replace(/\./g, '[.]') + u.pathname + u.search + u.hash;
+            return u.protocol.replace('http', 'hxxp') + '//' + u.host.replace(/\./g, '[.]') + u.pathname + u.search;
         } catch (e) { return String(url).replace(/^http/i, 'hxxp').replace(/\./g, '[.]'); }
-    }
-    function threatType(log) {
-        if (getActionStatus(log) === 'safe') return 'safe';
-        const r = logReason(log).toLowerCase();
-        if (r.includes('cinsel')) return 'explicit';
-        if (r.includes('phishing') || r.includes('oltalama') || r.includes('zararlı') || r.includes('sahte')) return 'phishing';
-        if (r.includes('bahis') || r.includes('kumar')) return 'gambling';
-        return 'other';
     }
 
     function toast(msg, type = 'ok') {
@@ -504,60 +1199,54 @@
         setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 3800);
     }
 
-    function confirmDialog({ title, message, okText = 'Onayla', danger = false }) {
-        return new Promise(resolve => {
-            const wrap = document.createElement('div');
-            wrap.className = 'modal open';
-            wrap.style.zIndex = 1100;
-            wrap.innerHTML = `
-                <div class="modal-content small" role="alertdialog" aria-modal="true">
-                    <div class="modal-header"><h2>${esc(title)}</h2></div>
-                    <div class="modal-body"><p>${esc(message)}</p></div>
-                    <div class="modal-footer"><span></span>
-                        <div class="btn-row">
-                            <button class="btn btn-secondary" data-r="0">Vazgeç</button>
-                            <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-r="1">${esc(okText)}</button>
-                        </div>
-                    </div>
-                </div>`;
-            const done = v => { document.removeEventListener('keydown', onKey, true); wrap.remove(); resolve(v); };
-            const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } };
-            wrap.addEventListener('click', e => {
-                if (e.target === wrap) return done(false);
-                const b = e.target.closest('[data-r]');
-                if (b) done(b.dataset.r === '1');
-            });
-            document.addEventListener('keydown', onKey, true);
-            document.body.appendChild(wrap);
-            wrap.querySelector('[data-r="0"]').focus();
-        });
+    /* WebSocket Connection */
+    function initWebSocket() {
+        if (!live) return;
+        const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsHost = location.protocol === 'file:' ? '127.0.0.1:8001' : (location.host || '127.0.0.1:8001');
+        const wsUrl = `${wsProto}//${wsHost}/ws/logs`;
+
+        try {
+            if (ws) ws.close();
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                setConn(true, 'CANLI (WS)');
+                $('liveProtocol').textContent = 'WEBSOCKET_OPEN';
+            };
+
+            ws.onmessage = (event) => {
+                if (!live) return;
+                try {
+                    const newLog = JSON.parse(event.data);
+                    if (newLog && newLog.id) {
+                        allLogs.unshift(newLog);
+                        stats.total += 1;
+                        const isBlock = getActionStatus(newLog) === 'blocked';
+                        if (isBlock) stats.blocked += 1;
+                        else if (getActionStatus(newLog) === 'safe') stats.safe += 1;
+
+                        // Add 3D threat beacon & play synthesized sound
+                        addThreatBeacon(isBlock);
+                        playTacticalSound(isBlock ? "block" : "alert");
+
+                        renderAll();
+                        const prefix = I18N[CURRENT_LANG].toastNewEvent;
+                        toast(`${prefix}${newLog.hedef_url || newLog.url}`, isBlock ? 'error' : 'info');
+                    }
+                } catch(e) {}
+            };
+
+            ws.onclose = () => {
+                setConn(true, 'CANLI (POLL)');
+                $('liveProtocol').textContent = 'FALLBACK_POLL';
+                setTimeout(() => { if (live) initWebSocket(); }, 4000);
+            };
+
+            ws.onerror = () => { try { ws.close(); } catch(e) {} };
+        } catch(e) {}
     }
 
-    function downloadBlob(blob, name) {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    }
-    function stampName(ext) {
-        const d = new Date(), p = n => String(n).padStart(2, '0');
-        return `adli-rapor-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.${ext}`;
-    }
-
-    /* ---------- Sekmeler ---------- */
-    function switchTab(tabId, btn) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('active'); el.setAttribute('aria-selected', 'false'); });
-        $(tabId).classList.add('active');
-        btn.classList.add('active');
-        btn.setAttribute('aria-selected', 'true');
-        if (tabId === 'whiteTab') fetchWhitelist();
-    }
-
-    /* ---------- Veri çekme ---------- */
     async function fetchLogs() {
         try {
             const res = await fetch(API + '/api/logs');
@@ -571,7 +1260,7 @@
                 blocked: data.blocked ?? st.blocked ?? logs.filter(l => getActionStatus(l) === 'blocked').length
             };
             allLogs = logs;
-            setConn(true);
+            setConn(true, ws && ws.readyState === 1 ? 'CANLI (WS)' : 'CANLI (POLL)');
             const sig = [stats.total, stats.blocked, logs.length, logs.length ? logs[0].id : ''].join('|');
             if (sig !== lastSig) { lastSig = sig; renderAll(); }
         } catch (e) {
@@ -584,52 +1273,16 @@
         const box = $('liveBox');
         box.classList.toggle('offline', !ok);
         box.classList.toggle('paused', ok && !live);
-        $('liveText').textContent = !ok ? 'BAĞLANTI YOK' : (live ? (customText || 'CANLI') : 'DURAKLATILDI');
+        $('liveText').textContent = !ok ? 'OFFLINE' : (live ? (customText || 'LIVE') : 'PAUSED');
         if (ok) {
             const n = new Date(), p = x => String(x).padStart(2, '0');
-            $('lastUpdate').textContent = `Son güncelleme: ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+            $('lastUpdate').textContent = `Updated: ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
         }
-    }
-
-    let ws = null;
-    function initWebSocket() {
-        if (!live) return;
-        const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsHost = location.protocol === 'file:' ? '127.0.0.1:8001' : (location.host || '127.0.0.1:8001');
-        const wsUrl = `${wsProto}//${wsHost}/ws/logs`;
-        try {
-            if (ws) ws.close();
-            ws = new WebSocket(wsUrl);
-            ws.onopen = () => {
-                setConn(true, 'CANLI (WS)');
-            };
-            ws.onmessage = (event) => {
-                if (!live) return;
-                try {
-                    const newLog = JSON.parse(event.data);
-                    if (newLog && newLog.id) {
-                        allLogs.unshift(newLog);
-                        stats.total += 1;
-                        if (getActionStatus(newLog) === 'blocked') stats.blocked += 1;
-                        else if (getActionStatus(newLog) === 'safe') stats.safe += 1;
-                        renderAll();
-                        toast(`Yeni Olay: ${newLog.hedef_url || newLog.url}`, newLog.action === 'BLOCK' ? 'error' : 'info');
-                    }
-                } catch(e) {}
-            };
-            ws.onclose = () => {
-                setConn(true, 'CANLI (POLL)');
-                setTimeout(() => { if (live) initWebSocket(); }, 4000);
-            };
-            ws.onerror = () => {
-                try { ws.close(); } catch(e) {}
-            };
-        } catch(e) {}
     }
 
     function toggleLive() {
         live = !live;
-        $('liveBtn').textContent = live ? 'Akışı Duraklat' : 'Akışı Sürdür';
+        $('liveBtn').textContent = live ? I18N[CURRENT_LANG].pauseStream : I18N[CURRENT_LANG].resumeStream;
         setConn(!$('liveBox').classList.contains('offline'));
         if (live) {
             initWebSocket();
@@ -639,9 +1292,21 @@
         }
     }
 
-    /* ---------- Çizim ---------- */
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('active'); el.setAttribute('aria-selected', 'false'); });
+        $(tabId).classList.add('active');
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        if (tabId === 'whiteTab') fetchWhitelist();
+    }
+
+    /* ==============================================================
+       6. RENDERING & STATS LOGIC
+       ============================================================== */
     function renderAll() {
         renderStats();
+        renderDefcon();
         renderTape();
         renderInsights();
         renderTable();
@@ -649,366 +1314,330 @@
     }
 
     function renderStats() {
-        $('total-count').textContent = stats.total;
-        $('safe-count').textContent = stats.safe;
-        $('blocked-count').textContent = stats.blocked;
-        const t = stats.total || 0;
-        const sp = t ? Math.round(stats.safe / t * 100) : 0;
-        const bp = t ? Math.round(stats.blocked / t * 100) : 0;
-        $('safePct').textContent = '%' + sp;
-        $('blockedPct').textContent = '%' + bp;
-        $('safeBar').style.width = sp + '%';
-        $('blockedBar').style.width = bp + '%';
+        $('total-count').textContent = stats.total.toLocaleString();
+        $('safe-count').textContent = stats.safe.toLocaleString();
+        $('blocked-count').textContent = stats.blocked.toLocaleString();
+
+        const sPct = stats.total ? Math.round((stats.safe / stats.total) * 100) : 0;
+        const bPct = stats.total ? Math.round((stats.blocked / stats.total) * 100) : 0;
+
+        $('safeBar').style.width = sPct + '%';
+        $('safePct').textContent = sPct + '%';
+        $('blockedBar').style.width = bPct + '%';
+        $('blockedPct').textContent = bPct + '%';
+
+        const rate = stats.total ? ((stats.blocked / stats.total) * 100).toFixed(1) : '0.0';
+        $('threatRateVal').textContent = rate + '%';
+        $('threatBar').style.width = Math.min(100, bPct * 2) + '%';
+
         $('navLogs').textContent = stats.total;
         $('navBlack').textContent = stats.blocked;
     }
 
-    function renderTape() {
-        const el = $('tape');
-        const recent = allLogs.slice(0, 80).reverse();
-        if (!recent.length) { el.innerHTML = '<div class="tape-empty">Henüz tarama kaydı yok</div>'; return; }
-        el.innerHTML = recent.map(l => {
-            const st = getActionStatus(l);
-            let h = 22;
-            if (st === 'blocked') h = 38 + 0.6 * Math.max(pct(l.url_score), pct(l.text_score));
-            else if (st === 'suspicious') h = 30 + 0.5 * Math.max(pct(l.url_score), pct(l.text_score));
-            const tip = `${fmtDate(l)} ${fmtTime(l)} — ${l.url}`;
-            return `<button class="tick ${st}" style="--h:${h}%" data-id="${esc(l.id)}" title="${esc(tip)}" aria-label="${esc(tip)}"></button>`;
-        }).join('');
+    function renderDefcon() {
+        const bPct = stats.total ? (stats.blocked / stats.total) * 100 : 0;
+        const banner = $('defconBanner');
+        const badge = $('defconBadge');
+        const text = $('defconText');
+        const meta = $('defconMeta');
+        const lang = I18N[CURRENT_LANG];
+
+        banner.className = 'defcon-banner';
+        meta.textContent = `THREAT RATIO: ${bPct.toFixed(1)}%`;
+
+        if (bPct > 25) {
+            banner.classList.add('level-critical');
+            badge.innerHTML = `<span>${lang.defconCritical}</span>`;
+            text.textContent = lang.defconTextCritical;
+        } else if (bPct > 8) {
+            banner.classList.add('level-elevated');
+            badge.innerHTML = `<span>${lang.defconElevated}</span>`;
+            text.textContent = lang.defconTextElevated;
+        } else {
+            banner.classList.add('level-normal');
+            badge.innerHTML = `<span>${lang.defconNormal}</span>`;
+            text.textContent = lang.defconTextNormal;
+        }
     }
 
-    function rankHtml(items, max, emptyText) {
-        if (!items.length) return `<li class="rank-empty">${esc(emptyText)}</li>`;
-        return items.map(([name, n]) => `
-            <li><span class="name" title="${esc(name)}">${esc(name)}</span><span class="num">${n}</span>
-            <div class="bar"><b style="width:${Math.round(n / max * 100)}%"></b></div></li>`).join('');
+    function renderTape() {
+        const tape = $('tape');
+        tape.innerHTML = '';
+        const recent = allLogs.slice(0, 80).reverse();
+        if (!recent.length) {
+            tape.innerHTML = `<span class="tape-empty">${I18N[CURRENT_LANG].noThreats}</span>`;
+            return;
+        }
+        recent.forEach(log => {
+            const st = getActionStatus(log);
+            const btn = document.createElement('button');
+            btn.className = `tick ${st}`;
+            const sc = Math.max(log.url_score || 0, log.text_score || 0);
+            btn.style.setProperty('--h', Math.max(25, sc) + '%');
+            btn.title = `${log.time || ''} - ${log.url || ''}`;
+            btn.onclick = () => openDetails(log.id);
+            tape.appendChild(btn);
+        });
     }
 
     function renderInsights() {
-        const threats = allLogs.filter(l => getActionStatus(l) !== 'safe');
-        const types = {}, domains = {};
-        threats.forEach(l => {
-            const t = TYPE_LABELS[threatType(l)] || 'Diğer';
-            types[t] = (types[t] || 0) + 1;
-            const h = hostOf(l.url) || l.domain || '(bilinmiyor)';
-            domains[h] = (domains[h] || 0) + 1;
+        // Types
+        const types = {};
+        allLogs.filter(l => getActionStatus(l) !== 'safe').forEach(l => {
+            const r = (l.reason || '').toLowerCase();
+            let key = 'Phishing';
+            if (r.includes('cinsel') || r.includes('explicit')) key = 'Explicit Policy';
+            else if (r.includes('bahis') || r.includes('gambling')) key = 'Illegal Gambling';
+            else if (r.includes('homograph') || r.includes('punycode')) key = 'Homograph / Punycode';
+            else if (r.includes('şifre') || r.includes('credential')) key = 'Credential Harvesting';
+            types[key] = (types[key] || 0) + 1;
         });
-        const tArr = Object.entries(types).sort((a, b) => b[1] - a[1]);
-        const dArr = Object.entries(domains).sort((a, b) => b[1] - a[1]).slice(0, 6);
-        $('typeRank').innerHTML = rankHtml(tArr, tArr.length ? tArr[0][1] : 1, 'Tehdit kaydı yok');
-        $('domainRank').innerHTML = rankHtml(dArr, dArr.length ? dArr[0][1] : 1, 'Şüpheli/engellenen alan yok');
-    }
 
-    function getFiltered() {
-        const q = $('searchInput').value.toLowerCase();
-        const status = $('statusFilter').value;
-        const type = $('typeFilter').value;
-        let list = allLogs.filter(l => {
-            const hay = (String(l.url || '') + ' ' + logReason(l)).toLowerCase();
-            if (q && !hay.includes(q)) return false;
-            const st = getActionStatus(l);
-            if (status === 'blocked' && st !== 'blocked') return false;
-            if (status === 'suspicious' && st !== 'suspicious') return false;
-            if (status === 'safe' && st !== 'safe') return false;
-            if (type !== 'all' && threatType(l) !== type) return false;
-            return true;
+        const typeRank = $('typeRank');
+        typeRank.innerHTML = '';
+        Object.entries(types).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([name, count]) => {
+            typeRank.innerHTML += `
+                <li>
+                    <span class="name">${esc(name)}</span><span class="num">${count}</span>
+                    <div class="bar"><b style="width: ${Math.min(100, count * 15)}%"></b></div>
+                </li>`;
         });
-        if (!sortDesc) list = list.slice().reverse();
-        return list;
-    }
 
-    function scoreHtml(label, v) {
-        const n = pct(v);
-        return `<span class="sc">${label} ${n}<i class="meter ${n >= 60 ? 'hot' : ''}"><b style="width:${n}%"></b></i></span>`;
-    }
+        // Top Malicious Domains
+        const doms = {};
+        allLogs.filter(l => getActionStatus(l) === 'blocked').forEach(l => {
+            const d = l.domain || 'unknown';
+            doms[d] = (doms[d] || 0) + 1;
+        });
 
-    function statusBadge(log) {
-        const st = getActionStatus(log);
-        if (st === 'blocked') return '<span class="badge blocked">ENGELLENDİ</span>';
-        if (st === 'suspicious') return '<span class="badge suspicious">ŞÜPHELİ</span>';
-        return '<span class="badge safe">GÜVENLİ</span>';
-    }
-
-    function logRow(log) {
-        const st = getActionStatus(log);
-        const rowClass = st === 'blocked' ? 'is-blocked' : (st === 'suspicious' ? 'is-suspicious' : '');
-        const type = threatType(log);
-        return `
-        <tr class="log-row ${rowClass}" data-id="${esc(log.id)}">
-            <td class="c-time"><span class="t-main">${esc(fmtTime(log))}</span><span class="t-sub">${esc(fmtDate(log))}</span></td>
-            <td>
-                <div class="url-cell" title="Tam Adres: ${esc(log.url)}">${esc(log.url)}</div>
-                <div class="score-box">${scoreHtml('URL', log.url_score)}${scoreHtml('Metin', log.text_score)}</div>
-            </td>
-            <td>
-                <div class="reason">${esc(logReason(log))}</div>
-                <span class="tag">Tespit Eden: ${esc(log.detector || 'Bilinmiyor')}</span>${st !== 'safe' ? `<span class="tag type-tag">${esc(TYPE_LABELS[type] || 'Diğer')}</span>` : ''}
-            </td>
-            <td>${statusBadge(log)}</td>
-        </tr>`;
+        const domRank = $('domainRank');
+        domRank.innerHTML = '';
+        Object.entries(doms).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([dom, count]) => {
+            domRank.innerHTML += `
+                <li>
+                    <span class="name">${esc(dom)}</span><span class="num">${count}</span>
+                    <div class="bar"><b style="width: ${Math.min(100, count * 20)}%"></b></div>
+                </li>`;
+        });
     }
 
     function renderTable() {
         const tbody = $('logs-table');
-        const list = getFiltered();
-        const shown = list.slice(0, visibleCount);
-        if (!list.length) {
-            tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Kayıt bulunamadı.</td></tr>';
-        } else {
-            tbody.innerHTML = shown.map(logRow).join('');
+        const q = $('searchInput').value.trim().toLowerCase();
+        const stFilter = $('statusFilter').value;
+
+        let filtered = allLogs.filter(log => {
+            if (stFilter !== 'all' && getActionStatus(log) !== stFilter) return false;
+            if (q) {
+                const haystack = `${log.url || ''} ${log.reason || ''} ${log.detector || ''}`.toLowerCase();
+                if (!haystack.includes(q)) return false;
+            }
+            return true;
+        });
+
+        $('resultInfo').textContent = `${filtered.length} / ${allLogs.length} events matching filter`;
+
+        if (!filtered.length) {
+            tbody.innerHTML = `<tr><td colspan="4" class="empty-row">${I18N[CURRENT_LANG].noThreats}</td></tr>`;
+            $('moreWrap').style.display = 'none';
+            return;
         }
-        $('resultInfo').textContent = list.length ? `${shown.length} / ${list.length} kayıt gösteriliyor` : '';
-        const rest = list.length - shown.length;
-        $('moreWrap').style.display = rest > 0 ? 'flex' : 'none';
-        $('moreBtn').textContent = `Daha fazla göster (${rest} kayıt daha)`;
-        $('sortTime').textContent = sortDesc ? 'TARİH/SAAT ↓' : 'TARİH/SAAT ↑';
+
+        const toShow = filtered.slice(0, visibleCount);
+        tbody.innerHTML = toShow.map(log => {
+            const st = getActionStatus(log);
+            const isBlocked = st === 'blocked';
+            const isSusp = st === 'suspicious';
+            const cls = isBlocked ? 'is-blocked' : (isSusp ? 'is-suspicious' : '');
+            const badgeCls = isBlocked ? 'blocked' : (isSusp ? 'suspicious' : 'safe');
+            const badgeTxt = isBlocked ? 'BLOCKED' : (isSusp ? 'SUSPICIOUS' : 'CLEAN');
+
+            return `
+                <tr class="log-row ${cls}" data-id="${log.id}">
+                    <td class="c-time">
+                        <span class="t-main">${esc(log.time || '-')}</span>
+                        <span class="t-sub">${esc(log.date || '')}</span>
+                    </td>
+                    <td>
+                        <div class="url-cell" title="${esc(log.url)}">${esc(defang(log.url))}</div>
+                        <div class="score-box">
+                            <span class="sc">Risk: <span class="meter ${log.url_score > 60 ? 'hot' : ''}"><b style="width:${log.url_score || 0}%"></b></span> ${log.url_score || 0}%</span>
+                            ${log.has_evidence ? '<span class="mitre-pill" style="color:var(--gold); border-color:var(--gold-dim);">HTML EVIDENCE</span>' : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="reason">${esc(log.reason || '-')}</div>
+                        <span class="mitre-pill">${esc(log.detector || 'AntiGravity Core')}</span>
+                    </td>
+                    <td><span class="badge ${badgeCls}">${badgeTxt}</span></td>
+                </tr>`;
+        }).join('');
+
+        $('moreWrap').style.display = filtered.length > visibleCount ? 'block' : 'none';
     }
 
     function renderBlacklistTable() {
         const tbody = $('blacklist-table');
-        const blocked = allLogs.filter(l => getActionStatus(l) === 'blocked').slice(0, 200);
-        if (!blocked.length) {
-            tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Engellenen tehdit bulunmuyor.</td></tr>';
+        const blockedLogs = allLogs.filter(l => getActionStatus(l) === 'blocked');
+        if (!blockedLogs.length) {
+            tbody.innerHTML = `<tr><td colspan="4" class="empty-row">${I18N[CURRENT_LANG].noThreats}</td></tr>`;
             return;
         }
-        tbody.innerHTML = blocked.map(log => `
-            <tr class="log-row is-blocked" data-id="${esc(log.id)}">
-                <td class="c-time"><span class="t-main">${esc(fmtTime(log))}</span><span class="t-sub">${esc(fmtDate(log))}</span></td>
-                <td><div class="mono-danger" title="${esc(log.url)}">${esc(log.url)}</div></td>
-                <td>${esc(logReason(log))}</td>
-                <td><span style="color: var(--brass);">${esc(log.detector || 'Bilinmiyor')}</span></td>
-            </tr>`).join('');
+        tbody.innerHTML = blockedLogs.slice(0, 50).map(l => `
+            <tr class="log-row is-blocked" data-id="${l.id}">
+                <td>${esc(l.timestamp || '-')}</td>
+                <td class="url-cell">${esc(defang(l.url))}</td>
+                <td>${esc(l.reason || '-')}</td>
+                <td><span class="mitre-pill">${esc(l.detector || 'Zero-Trust Engine')}</span></td>
+            </tr>
+        `).join('');
     }
 
-    function filterLogs() { visibleCount = PAGE_SIZE; renderTable(); }
-    function showMore() { visibleCount += PAGE_SIZE; renderTable(); }
-    function toggleSort() { sortDesc = !sortDesc; renderTable(); }
+    function filterLogs() {
+        visibleCount = PAGE_SIZE;
+        renderTable();
+    }
+    function showMore() {
+        visibleCount += PAGE_SIZE;
+        renderTable();
+    }
+    function toggleSort() {
+        allLogs.reverse();
+        sortDesc = !sortDesc;
+        $('sortTime').textContent = sortDesc ? 'TIMESTAMP ↓' : 'TIMESTAMP ↑';
+        renderTable();
+    }
 
-    /* ---------- Detay penceresi ---------- */
-    async function openDetails(id) {
-        let data = allLogs.find(l => String(l.id) === String(id)) || null;
-        data = data ? { ...data } : null;
+    /* Modal Dossier */
+    async function openDetails(logId) {
         try {
-            const res = await fetch(`${API}/api/details/${encodeURIComponent(id)}`);
-            if (res.ok) {
-                const d = await res.json();
-                if (d && d.url) data = { ...(data || {}), ...d };
+            const res = await fetch(`${API}/api/details/${logId}`);
+            if (!res.ok) throw new Error();
+            const log = await res.json();
+
+            $('modalTitle').textContent = `🔍 ${I18N[CURRENT_LANG].dossierTitle} #${log.id}`;
+            $('modalBody').innerHTML = `
+                <dl class="dl">
+                    <dt>${I18N[CURRENT_LANG].dossierUrl}</dt>
+                    <dd class="link">${esc(defang(log.url))}</dd>
+                    <dt>${I18N[CURRENT_LANG].dossierVerdict}</dt>
+                    <dd><span class="badge ${getActionStatus(log)}">${esc(log.action)}</span></dd>
+                    <dt>${I18N[CURRENT_LANG].dossierScore}</dt>
+                    <dd style="font-family:var(--mono); font-weight:700;">${log.url_score || 0}% Risk Probability</dd>
+                    <dt>${I18N[CURRENT_LANG].dossierTime}</dt>
+                    <dd>${esc(log.timestamp)}</dd>
+                    <dt>${I18N[CURRENT_LANG].dossierMitre}</dt>
+                    <dd><span class="mitre-pill">${esc(log.detector)}</span></dd>
+                    <dt>${I18N[CURRENT_LANG].dossierEvidence}</dt>
+                    <dd>${log.has_evidence ? I18N[CURRENT_LANG].evidenceQuarantined : I18N[CURRENT_LANG].evidenceNone}</dd>
+                </dl>
+            `;
+
+            $('whitelistBtn').onclick = () => addWhitelist(log.domain);
+            const dlBtn = $('downloadBtn');
+            if (log.has_evidence) {
+                dlBtn.style.display = 'inline-flex';
+                dlBtn.href = `${API}/api/evidence/${log.id}`;
+            } else {
+                dlBtn.style.display = 'none';
             }
-        } catch (e) { /* yoksay */ }
-        if (!data) { toast('Kayıt bulunamadı.', 'error'); return; }
 
-        const st = getActionStatus(data);
-        const url = String(data.url || '');
-        const when = data.timestamp || `${fmtDate(data)} ${fmtTime(data)}`.trim() || '-';
-        const row = (label, value, cls = '') => `<dt>${label}</dt><dd class="${cls}">${value}</dd>`;
-
-        let stampText = 'GÜVENLİ';
-        let stampClass = 'safe';
-        let statusHtml = '<span style="color:var(--safe); font-weight:700;">Güvenli</span>';
-
-        if (st === 'blocked') {
-            stampText = 'TEHDİT / ENGELLENDİ';
-            stampClass = 'blocked';
-            statusHtml = '<span style="color:var(--danger); font-weight:700;">Tehdit / Engellendi</span>';
-        } else if (st === 'suspicious') {
-            stampText = 'ŞÜPHELİ İÇERİK';
-            stampClass = 'suspicious';
-            statusHtml = '<span style="color:var(--warning); font-weight:700;">Şüpheli</span>';
-        }
-
-        $('modalBody').innerHTML = `
-            <div class="case-stamp"><span class="stamp ${stampClass}">${stampText}</span></div>
-            <dl class="dl">
-                ${row('Zaman:', esc(when))}
-                <dt>Hedef URL:</dt>
-                <dd class="link">${esc(url || '-')}
-                    <div class="mini-actions">
-                        <button class="mini-btn" id="copyUrl">Kopyala</button>
-                        <button class="mini-btn" id="copyDefang">Güvenli kopyala (hxxp)</button>
-                    </div>
-                </dd>
-                ${row('Alan Adı:', esc(hostOf(url) || data.domain || '-'))}
-                ${row('Durum:', statusHtml)}
-                ${row('Sebep:', esc(logReason(data)))}
-                ${row('Tespit Eden:', `<span style="color: var(--brass); font-weight: 700;">${esc(data.detector || 'Bilinmiyor')}</span>`)}
-                <dt>Skorlar:</dt>
-                <dd><div class="big-scores">
-                    <div class="row"><span>URL</span><i class="meter ${pct(data.url_score) >= 60 ? 'hot' : ''}"><b style="width:${pct(data.url_score)}%"></b></i><span>${pct(data.url_score)}</span></div>
-                    <div class="row"><span>Metin</span><i class="meter ${pct(data.text_score) >= 60 ? 'hot' : ''}"><b style="width:${pct(data.text_score)}%"></b></i><span>${pct(data.text_score)}</span></div>
-                </div></dd>
-            </dl>`;
-
-        const copy = async text => {
-            try { await navigator.clipboard.writeText(text); toast('Panoya kopyalandı.'); }
-            catch (e) { toast('Kopyalanamadı.', 'error'); }
-        };
-        $('copyUrl').onclick = () => copy(url);
-        $('copyDefang').onclick = () => copy(defang(url));
-        $('whitelistBtn').onclick = () => addWhitelist(url);
-
-        const downloadBtn = $('downloadBtn');
-        if (data.has_evidence) {
-            downloadBtn.href = `${API}/api/evidence/${encodeURIComponent(id)}`;
-            downloadBtn.style.display = 'inline-flex';
-        } else {
-            downloadBtn.style.display = 'none';
-        }
-        $('detailModal').classList.add('open');
+            $('detailModal').classList.add('open');
+        } catch(e) {}
     }
-
     function closeModal() { $('detailModal').classList.remove('open'); }
 
-    /* ---------- Beyaz liste ---------- */
+    /* Whitelist API */
     async function fetchWhitelist() {
-        const tbody = $('whitelist-table');
         try {
-            const res = await fetch(API + '/api/whitelist');
-            const list = res.ok ? await res.json() : null;
-            if (!Array.isArray(list)) {
-                tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Beyaz liste servisi kullanılamıyor.</td></tr>';
-                $('navWhite').textContent = '–';
-                return;
-            }
+            const res = await fetch(`${API}/api/whitelist`);
+            const list = await res.json();
             $('navWhite').textContent = list.length;
+            const tbody = $('whitelist-table');
             if (!list.length) {
-                tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Beyaz listede kayıt bulunmuyor.</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="3" class="empty-row">${I18N[CURRENT_LANG].noThreats}</td></tr>`;
                 return;
             }
             tbody.innerHTML = list.map(item => `
                 <tr>
-                    <td>${esc(item.id)}</td>
-                    <td class="mono-safe">${esc(item.domain)}</td>
-                    <td><button class="btn-sm-danger" data-remove="${esc(item.domain)}">🗑️ Listeden Çıkar</button></td>
+                    <td style="font-family:var(--mono); color:var(--text-muted);">${item.id}</td>
+                    <td style="font-family:var(--mono); font-weight:600; color:var(--safe);">${esc(item.domain)}</td>
+                    <td><button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="removeWhitelist('${esc(item.domain)}')">Remove</button></td>
                 </tr>`).join('');
-        } catch (e) {
-            console.error(e);
-            tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Beyaz liste yüklenemedi.</td></tr>';
-        }
+        } catch(e) {}
+    }
+
+    async function addWhitelist(domain) {
+        if (!domain) return;
+        const res = await fetch(`${API}/api/whitelist/add`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ domain })
+        });
+        const data = await res.json();
+        toast(`${domain} ${I18N[CURRENT_LANG].toastAddedWhite}`);
+        fetchWhitelist();
+        closeModal();
+    }
+
+    function addWhitelistManual() {
+        const inp = $('whiteInput');
+        const val = inp.value.trim();
+        if (val) { addWhitelist(val); inp.value = ''; }
     }
 
     async function removeWhitelist(domain) {
-        const ok = await confirmDialog({
-            title: 'Beyaz Listeden Çıkar',
-            message: `${domain} adresini beyaz listeden çıkarmak istediğinize emin misiniz?`,
-            okText: 'Evet, çıkar', danger: true
+        await fetch(`${API}/api/whitelist/remove`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ domain })
         });
-        if (!ok) return;
-        try {
-            const res = await fetch(API + '/api/whitelist/remove', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ domain })
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.message || 'Listeden çıkarılamadı.');
-            toast(data.message || 'Listeden çıkarıldı.');
-        } catch (e) { toast(e.message || 'Listeden çıkarılamadı.', 'error'); }
+        toast(`${domain} ${I18N[CURRENT_LANG].toastRemovedWhite}`, 'info');
         fetchWhitelist();
     }
 
-    async function addWhitelist(urlOrDomain) {
-        const domain = normalizeDomain(urlOrDomain);
-        if (!domain) { toast('Geçerli bir alan adı girin.', 'error'); return false; }
-        try {
-            const res = await fetch(API + '/api/whitelist/add', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ domain })
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.message || 'Beyaz listeye eklenemedi.');
-            toast(data.message || `${domain} beyaz listeye eklendi.`);
-            closeModal();
-            lastSig = '';
-            fetchLogs();
-            if ($('whiteTab').classList.contains('active')) fetchWhitelist();
-            return true;
-        } catch (e) {
-            toast(e.message || 'Beyaz listeye eklenemedi.', 'error');
-            return false;
-        }
+    /* Forensic Export (SHA-256 JSON) */
+    function exportReport() {
+        window.open(`${API}/api/export-report`, '_blank');
     }
 
-    async function addWhitelistManual() {
-        const input = $('whiteInput');
-        if (await addWhitelist(input.value)) input.value = '';
-    }
-
-    /* ---------- Rapor / temizleme ---------- */
-    async function exportReport() {
-        let blob = null;
-        try {
-            const res = await fetch(API + '/api/export-report');
-            if (res.ok) blob = await res.blob();
-        } catch (e) { /* yerel rapora düş */ }
-        if (!blob) {
-            const report = {
-                olusturulma: new Date().toISOString(),
-                ozet: stats,
-                kayitlar: allLogs
-            };
-            blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-        }
-        downloadBlob(blob, stampName('json'));
-        toast('Adli rapor indirildi.');
-    }
-
+    /* CSV Export */
     function exportCsv() {
-        const cols = ['id', 'timestamp', 'url', 'domain', 'action', 'reason', 'detector', 'url_score', 'text_score'];
-        const cell = v => {
-            let s = String(v ?? '');
-            if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
-            return '"' + s.replace(/"/g, '""') + '"';
-        };
-        const lines = [cols.join(',')].concat(allLogs.map(l => cols.map(c => cell(l[c])).join(',')));
-        downloadBlob(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }), stampName('csv'));
-        toast('CSV indirildi.');
-    }
-
-    async function clearLogsConfirm() {
-        const ok = await confirmDialog({
-            title: 'Logları Sıfırla',
-            message: 'Tüm log verileri kalıcı olarak silinecek. Bu işlem geri alınamaz.',
-            okText: 'Evet, sil', danger: true
+        let csv = 'ID,Timestamp,URL,Domain,Verdict,Reason,Score,MITRE\n';
+        allLogs.forEach(l => {
+            csv += `"${l.id}","${l.timestamp}","${l.url}","${l.domain}","${l.action}","${(l.reason||'').replace(/"/g, '""')}","${l.url_score}","${l.detector}"\n`;
         });
-        if (!ok) return;
-        let done = false;
-        try {
-            let res = await fetch(API + '/api/clear-logs', { method: 'POST' });
-            done = res.ok;
-            if (!done) { res = await fetch(API + '/api/logs', { method: 'DELETE' }); done = res.ok; }
-        } catch (e) { /* aşağıda bildirilir */ }
-        if (done) { toast('Tüm loglar temizlendi.'); lastSig = ''; fetchLogs(); }
-        else toast('Loglar silinemedi.', 'error');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `antigravity-telemetry-${Date.now()}.csv`;
+        a.click();
     }
 
-    /* ---------- Olaylar ---------- */
-    document.addEventListener('click', e => {
-        const rm = e.target.closest('[data-remove]');
-        if (rm) { removeWhitelist(rm.dataset.remove); return; }
-        const el = e.target.closest('[data-id]');
-        if (el) openDetails(el.dataset.id);
-    });
+    /* Purge Logs */
+    async function clearLogsConfirm() {
+        if (!confirm(CURRENT_LANG === 'tr' ? 'Tüm adli loglar silinsin mi?' : 'Purge all operational forensic logs?')) return;
+        await fetch(`${API}/api/clear-logs`, { method: 'POST' });
+        toast(I18N[CURRENT_LANG].toastCleared);
+        fetchLogs();
+    }
 
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') closeModal();
-        const typing = /^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '');
-        if (e.key === '/' && !typing) {
-            e.preventDefault();
-            const logsBtn = document.querySelector('.nav-btn');
-            if (!$('logsTab').classList.contains('active')) switchTab('logsTab', logsBtn);
-            $('searchInput').focus();
-        }
-    });
-
-    document.addEventListener('visibilitychange', () => { if (!document.hidden && live) fetchLogs(); });
-
-    /* ---------- Başlat ---------- */
+    /* Global Init */
     (function init() {
         const d = new Date(), p = n => String(n).padStart(2, '0');
         $('caseId').textContent = `AG-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
-        setInterval(() => { if (live && !document.hidden) fetchLogs(); }, 6000);
+
+        resizeGlobe();
+        draw3DGlobe();
+        initCardTilt();
+        setLanguage(CURRENT_LANG);
+
         fetchLogs();
         initWebSocket();
         fetchWhitelist();
+
+        document.getElementById("audioIcon").textContent = AUDIO_ENABLED ? "🔊" : "🔇";
+        document.getElementById("audioText").textContent = AUDIO_ENABLED ? "Audio: ON" : "Audio: MUTED";
     })();
 </script>
 </body>
