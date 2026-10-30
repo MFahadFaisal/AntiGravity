@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AntiGravity Security</title>
+    <style>
+        :root {
+            --bg: #141311;
+            --panel: #1f1d19;
+            --border: #332f28;
+            --text: #e8e2d5;
+            --text-muted: #8c8474;
+            --accent: #c4a76c;
+            --safe: #4ade80;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            width: 330px;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            user-select: none;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 14px;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+        }
+
+        .engine-pill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-family: monospace;
+            padding: 3px 7px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--safe);
+            box-shadow: 0 0 6px var(--safe);
+        }
+
+        .dot.offline {
+            background: var(--danger);
+            box-shadow: 0 0 6px var(--danger);
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .site-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .site-host {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .badge-safe { background: rgba(74, 222, 128, 0.15); color: var(--safe); border: 1px solid rgba(74, 222, 128, 0.3); }
+        .badge-danger { background: rgba(239, 68, 68, 0.18); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.35); }
+        .badge-warning { background: rgba(245, 158, 11, 0.18); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.35); }
+
+        .score-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .meter-bg {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            margin: 0 10px;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--safe);
+            transition: width 0.4s ease;
+        }
+
+        .meter-fill.danger { background: var(--danger); }
+        .meter-fill.warning { background: var(--warning); }
+
+        .actions {
+            display: grid;
+            gap: 8px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--text);
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+
+        .btn:hover {
+            background: #282520;
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #141311;
+        }
+
+        .btn-primary:hover {
+            background: #d8ba7c;
+            border-color: #d8ba7c;
+            color: #141311;
+        }
+
+        .toast-msg {
+            font-size: 11px;
+            text-align: center;
+            margin-top: 8px;
+            color: var(--accent);
+            min-height: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-group">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4a76c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"/>
+                <path d="m9 12 2 2 4-4"/>
+            </svg>
+            <span class="logo-title">AntiGravity</span>
+        </div>
+        <div class="engine-pill" id="enginePill">
+            <div class="dot" id="engineDot"></div>
+            <span id="engineStatus">Motor: Aktif</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="site-label">Mevcut Sekme</div>
+        <div class="site-host" id="activeHost">Yükleniyor...</div>
+        
+        <div id="badgeContainer">
+            <div class="status-badge badge-safe" id="statusBadge">🛡️ Güvenli Sayfa</div>
+        </div>
+
+        <div class="score-row">
+            <span>Risk Skoru</span>
+            <div class="meter-bg">
+                <div class="meter-fill" id="riskMeter"></div>
+            </div>
+            <span id="riskScore">0%</span>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn" id="btnWhitelist">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Bu Alan Adını Beyaz Listeye Ekle
+        </button>
+
+        <button class="btn" id="btnReport">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Şüpheli/Oltalama Bildir
+        </button>
+
+        <button class="btn btn-primary" id="btnDashboard">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+            </svg>
+            SOC Kontrol Panelini Aç
+        </button>
+    </div>
+
+    <div class="toast-msg" id="toastMsg"></div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

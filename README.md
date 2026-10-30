@@ -1,30 +1,31 @@
-# 🛡️ AntiGravity: Zero-Trust AI Web Security & Phishing Defense Platform
+# 🛡️ AntiGravity v2.0: Zero-Trust AI Web Security & Phishing Defense Platform
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Chrome Extension](https://img.shields.io/badge/Chrome_Extension-MV3-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://developer.chrome.com/docs/extensions/)
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
-[![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![WebSocket](https://img.shields.io/badge/WebSocket-Real--Time-010101?style=for-the-badge&logo=socketdotio&logoColor=white)](https://fastapi.tiangolo.com/advanced/websockets/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**AntiGravity** is an enterprise-grade, real-time **Zero-Trust Web Security, Phishing Detection, and Digital Forensics** platform. It pairs an active **Google Chrome Manifest V3 Browser Agent** with a high-throughput **FastAPI Machine Learning Backend** and an integrated **SOC (Security Operations Center)** dashboard to shield users from fraudulent portals, malicious scripts, illegal gambling, and credential harvesting in real time.
+**AntiGravity** is an enterprise-grade, real-time **Zero-Trust Web Security, Phishing Detection, and Digital Forensics** platform. It pairs an active **Google Chrome Manifest V3 Browser Agent** (featuring an interactive toolbar popup and Shadow DOM blocking overlay) with a high-throughput **FastAPI Machine Learning Backend** and an integrated **SOC (Security Operations Center)** dashboard connected via **WebSockets** to shield users from fraudulent portals, brand impersonations, credential harvesting traps, and zero-day threats in real time.
 
 ---
 
 ## 📑 Table of Contents
 - [Architecture Overview](#-architecture-overview)
 - [Key Features](#-key-features)
-  - [1. Chrome Agent (Manifest V3)](#1-chrome-agent-manifest-v3)
-  - [2. Multi-Layered AI Engine](#2-multi-layered-ai-engine)
-  - [3. SOC & Digital Forensics Suite](#3-soc--digital-forensics-suite)
-- [Detection Pipeline](#-detection-pipeline)
+  - [1. Chrome Agent (Manifest V3) with Toolbar Popup](#1-chrome-agent-manifest-v3-with-toolbar-popup)
+  - [2. Multi-Layered AI Engine & Zero-Day Traps](#2-multi-layered-ai-engine--zero-day-traps)
+  - [3. SOC & Digital Forensics Suite with WebSockets](#3-soc--digital-forensics-suite-with-websockets)
+- [Zero-Day Detection Pipeline](#-zero-day-detection-pipeline)
+- [Feature Engineering (22 Lexical & Structural Metrics)](#-feature-engineering-22-lexical--structural-metrics)
 - [Repository Structure](#-repository-structure)
 - [Quick Start Guide](#-quick-start-guide)
   - [Prerequisites](#prerequisites)
   - [1. Backend Setup](#1-backend-setup)
   - [2. Chrome Extension Setup](#2-chrome-extension-setup)
 - [API Reference](#-api-reference)
-- [Machine Learning & Model Training](#-machine-learning--model-training)
+- [Machine Learning & Model Training (98.31% Accuracy)](#-machine-learning--model-training-9831-accuracy)
 - [Forensic Evidence & Integrity Verification](#-forensic-evidence--integrity-verification)
 - [License](#-license)
 
@@ -36,8 +37,13 @@
                           +------------------------------------------+
                           |           CLIENT ENVIRONMENT             |
                           |                                          |
+                          |      [ popup.html (Toolbar UI) ]         |
+                          |       - Live risk meter & engine status  |
+                          |       - 1-click Whitelist & Phish Report |
+                          |                                          |
                           |      [ content.js (Content Script) ]     |
                           |       - Telemetry & DOM feature scrape   |
+                          |       - Credential form trap on cloud    |
                           |       - MutationObserver ad/script trap  |
                           |       - Click interception on anchors    |
                           |       - Isolated Shadow DOM Shield       |
@@ -54,25 +60,28 @@
                                    (HTTP POST 127.0.0.1:8001)
                                                v
 +-----------------------------------------------------------------------------------------+
-|                               FASTAPI AI ENGINE & SERVER                                |
+|                          FASTAPI AI ENGINE & DETECTION SERVER                           |
 |                                                                                         |
 |  [Layer 1: System Domain Guard]  -> Pass-through for Google, OpenAI, GitHub, etc.      |
 |  [Layer 2: Custom Whitelist]     -> SQLite-backed operator domain bypass                |
-|  [Layer 3: Heuristic Filters]    -> Fast-path regex checks for explicit & gambling hits |
-|  [Layer 4: Threat Intelligence]  -> Active PhishTank database lookup (25,000+ entries)  |
-|  [Layer 5: Machine Learning]     -> Random Forest Classifier (30+ structural features)  |
-|  [Layer 6: OSINT Scraper]        -> Live multi-engine reputation check (DDG, Bing)      |
-|  [Layer 7: Evidence Logger]      -> Quarantined HTML capture in SQLite database          |
+|  [Layer 3: Punycode / IDN Trap]  -> Blocks internationalized lookalikes (xn--...)       |
+|  [Layer 4: Credential Trap]      -> Blocks password inputs on free cloud hosts (Vercel) |
+|  [Layer 5: Brand Spoofing Trap]  -> Blocks brand names in subdomains on foreign hosts   |
+|  [Layer 6: Threat Intelligence]  -> Active PhishTank database lookup (25,000+ entries)  |
+|  [Layer 7: Machine Learning]     -> 22-Feature Random Forest (98.31% Accuracy, No Pad)  |
+|  [Layer 8: OSINT Web Scraper]    -> Live multi-engine reputation check (DDG, Bing)      |
+|  [Layer 9: Evidence Logger]      -> Quarantined HTML capture in SQLite database          |
 +--------------------------------------------+--------------------------------------------+
-                                             |
+                                             | (WebSocket /ws/logs)
                                              v
                           +------------------------------------------+
                           |          SOC FORENSIC DASHBOARD          |
                           |               (/dashboard)               |
-                          |  - Real-time event ledger & ticker tape  |
+                          |  - Real-time WebSocket streaming         |
                           |  - Defanged URLs (hxxp://...[.]...)      |
                           |  - Sandboxed HTML evidence downloader    |
                           |  - SHA-256 cryptographically signed logs |
+                          |  - MITRE ATT&CK taxonomy tags            |
                           +------------------------------------------+
 ```
 
@@ -80,30 +89,31 @@
 
 ## ✨ Key Features
 
-### 1. Chrome Agent (Manifest V3)
-* **Zero Overhead Sensor (`content.js`)**: Gathers lightweight page telemetry (URL, title, 1,500 characters of inner text, and raw HTML document structure) on window load.
-* **Dynamic Injection Defense**: Uses a live `MutationObserver` to monitor DOM tree changes, proactively destroying dynamically injected ad or malicious `<script>` and `<iframe>` elements before execution.
+### 1. Chrome Agent (Manifest V3) with Toolbar Popup
+* **Interactive Extension Popup (`popup.html` & `popup.js`)**: An operator toolbar interface displaying the real-time AI engine connection status, the active tab's risk score (0-100%), 1-click domain whitelisting, 1-click phishing reporting, and a shortcut to the SOC Console.
+* **Credential Form Trap**: Detects `<input type="password">` and credit card fields hosted on unverified or free cloud application providers (e.g. Vercel, Netlify, Firebase, ngrok, GitHub Pages) and alerts the AI Engine immediately.
+* **Dynamic Injection Defense**: Uses a live `MutationObserver` to monitor DOM changes, proactively destroying dynamically injected ad or malicious `<script>` and `<iframe>` elements before execution.
 * **Search-Engine-Aware Non-Blocking Alerts**: Differentiates search engine result pages (Google, Bing, DuckDuckGo) from target landing pages. Rather than locking down the search engine when phishing hits are found in search snippets, it displays a non-intrusive warning toast and arms **Link Click Interception**.
 * **Link Interception Engine**: Inspects anchor clicks prior to browser navigation, validating destination URLs against the AI Engine before the page is requested.
 * **Tamper-Proof Shadow DOM Overlay**: When a hard block is enforced, renders a zero-dependency full-screen shield within a closed **Shadow Root** (`#antigravity-shield`). Malicious website stylesheets or scripts cannot hide, bypass, or tamper with the shield.
 
-### 2. Multi-Layered AI Engine
-* **Pre-Emptive Whitelist & System Domain Guard**: Guarantees zero false positives on essential developer and productivity platforms (Google Workspace, GitHub, OpenAI, etc.).
-* **Active PhishTank Threat Intel Feed**: A background thread asynchronously synchronizes verified active malicious URLs directly from PhishTank into the local SQLite database cache.
-* **Random Forest ML Classification**: Inspects URLs using 30+ engineered attributes, including IP-based addresses, length thresholds, shortener detection (`bit.ly`, `tinyurl`), abnormal subdomains, and high-risk top-level domains (`.xyz`, `.top`, `.tk`, `.ml`, `.site`, `.online`, etc.).
+### 2. Multi-Layered AI Engine & Zero-Day Traps
+* **Punycode / IDN Homograph Defense**: Automatically unmasks and blocks Cyrillic/Greek lookalike domain spoofing (`xn--...`).
+* **Brand Impersonation in Subdomains**: Flags domains where high-profile brands (e.g. PayPal, Apple, Binance, Microsoft, Google) appear in subdomains or paths on unauthorized hosts (e.g., `paypal-verify.security-update.xyz`).
+* **Real-Time 22-Feature ML Model**: Powered by a calibrated Random Forest classifier trained directly on real-world PhishTank data and top web properties with **zero dummy padding**.
+* **Active PhishTank Threat Intel Feed**: A background thread asynchronously synchronizes verified active malicious URLs directly from PhishTank into the local SQLite database cache (25,000+ cached threats).
 * **Real-Time OSINT Reputation Scraper**: Performs automated web intelligence scraping across DuckDuckGo, Bing, and Yahoo to aggregate threat signals, user complaints, and fraudulent domain disclosures.
 
-### 3. SOC & Digital Forensics Suite
-* **Real-Time Analyst Console (`/dashboard`)**: Dark forensic user interface with live telemetry, event volume counters, risk distributions, and recent scan tickers.
+### 3. SOC & Digital Forensics Suite with WebSockets
+* **Live WebSocket Streaming (`/ws/logs`)**: High-performance real-time telemetry streaming pushes new alerts to connected analysts without HTTP polling delay.
+* **MITRE ATT&CK Tagging**: Categorizes incidents using standard cyber threat intelligence taxonomies (e.g. `T1566.002: Spearphishing Link`, `T1056: Input Capture`, `T1566.002: Homograph Phishing`).
 * **Defanged URL Safety**: Defangs all displayed indicators of compromise (`http://bad.com` $\to$ `hxxp://bad[.]com`) to protect security operations personnel from accidental navigation.
 * **HTML Evidence Quarantine**: Captures up to 150KB of sanitized HTML source code at the moment of compromise and archives it for forensic review.
 * **Cryptographic Tamper-Proof Reporting**: Exports complete forensic incident reports with a verifiable **SHA-256 digital signature** ensuring chain-of-custody validity.
 
 ---
 
-## 🔍 Detection Pipeline
-
-When a page navigation occurs, AntiGravity follows an orchestrated decision cascade:
+## 🔍 Zero-Day Detection Pipeline
 
 ```
 [ Incoming Request (/analyze) ]
@@ -115,16 +125,25 @@ When a page navigation occurs, AntiGravity follows an orchestrated decision casc
    [ Is In Custom Whitelist? ] ──( YES )───► ALLOW (Whitelisted)
                │ (NO)
                ▼
-   [ Explicit / Adult Regex? ] ──( YES )───► BLOCK (Explicit Content Policy)
+   [ IDN Punycode Spoofing? ] ───( YES )───► BLOCK (T1566.002: Homograph Phishing)
                │ (NO)
                ▼
-   [ In PhishTank Local DB? ] ───( YES )───► BLOCK / SUSPICIOUS (Confirmed Threat Intel)
+   [ Password on Free Host? ] ───( YES )───► BLOCK (T1056: Credential Harvesting)
                │ (NO)
                ▼
-   [ Random Forest Predicts? ] ──( YES )───► BLOCK / SUSPICIOUS (Phishing URL Pattern)
+   [ Brand Spoofing in Subdomain? ] ──► BLOCK (T1566.002: Brand Impersonation)
                │ (NO)
                ▼
-   [ OSINT Scam Score >= 3? ] ───( YES )───► BLOCK / SUSPICIOUS (OSINT Reputation Alert)
+   [ Explicit / Adult Regex? ] ──( YES )───► BLOCK (Policy Violation)
+               │ (NO)
+               ▼
+   [ In PhishTank Local DB? ] ───( YES )───► BLOCK / SUSPICIOUS (Confirmed Intel)
+               │ (NO)
+               ▼
+   [ Random Forest (22 Feats) ] ─( YES )───► BLOCK / SUSPICIOUS (ML Phishing Pattern)
+               │ (NO)
+               ▼
+   [ OSINT Scam Score >= 3? ] ───( YES )───► BLOCK / SUSPICIOUS (OSINT Threat Alert)
                │ (NO)
                ▼
    [ Illegal Gambling Regex? ] ──( YES )───► BLOCK / SUSPICIOUS (Gambling Policy)
@@ -135,32 +154,56 @@ When a page navigation occurs, AntiGravity follows an orchestrated decision casc
 
 ---
 
+## 📊 Feature Engineering (22 Lexical & Structural Metrics)
+
+AntiGravity v2.0 inspects URLs across 22 engineered features computed in $<0.5\text{ms}$ with zero dummy padding:
+
+| Feature Name | Description | Phishing Indicator |
+| :--- | :--- | :--- |
+| `domain_length` | Hostname character count | Exceptionally long randomized hostnames |
+| `path_length` | URL path length | Deep nested paths masking true destinations |
+| `suspicious_keywords_count` | Count of `login`, `verify`, `banking`, `wallet`, etc. | Aggressive social engineering triggers |
+| `num_slashes` | Directory depth | Complex obfuscated redirects |
+| `free_hosting_provider` | Hosted on Vercel, Firebase, Netlify, ngrok, etc. | Disposable, free phishing infrastructure |
+| `brand_spoofing` | Brand name in subdomain on foreign registered domain | Classic brand impersonation |
+| `has_punycode` | Presence of `xn--` in hostname | Lookalike visual Unicode deception |
+| `has_ip_address` | Raw IPv4/IPv6 used as host | Direct server connection evading DNS |
+| `has_shortener` | Bit.ly, TinyURL, t.co, is.gd, etc. | Destination masking |
+| `shannon_entropy` | Character distribution randomness ($H(X)$) | Algorithmic / DGA domain generation |
+| `suspicious_tld` | High-risk TLDs (`.xyz`, `.top`, `.cfd`, `.icu`, etc.) | Cheap, disposable malicious TLD registration |
+| `digit_ratio` | Ratio of digits to total URL length | Randomized tracking hashes |
+| `num_subdomains` | Dot count minus 1 in hostname | Multi-level subdomain masquerading |
+| `num_hyphens` | Hyphen character count | Fake brand hyphenation (`paypal-login-portal`) |
+| `num_special_chars` | Special characters (`@`, `?`, `=`, `&`, `%`, `+`) | Query obfuscation & basic auth injection |
+
+---
+
 ## 📁 Repository Structure
 
 ```
 AntiGravity/
-├── README.md                          # Project documentation and guide
+├── README.md                          # Comprehensive documentation
 ├── .gitignore                         # Git ignore configuration
 │
 ├── browser_agent/                     # Chrome Extension (Manifest V3)
-│   ├── manifest.json                  # Extension permissions & entry points
-│   ├── background.js                  # Service worker & network relay
+│   ├── manifest.json                  # Extension permissions & entry points (v2.0)
+│   ├── popup.html                     # Toolbar popup user interface
+│   ├── popup.js                       # Popup controller & status monitor
+│   ├── background.js                  # Service worker & proxy bridge
 │   └── content.js                     # Content script, DOM observer & Shadow DOM shield
 │
 └── ai_engine/                         # Backend Engine, ML & SOC Dashboard
-    ├── main.py                        # FastAPI application & detection engine
-    ├── dashboard.html                 # SOC & Forensics analyst interface
-    ├── train_models.py                # Model training & dataset pipeline
-    ├── antigravity_url_model.pkl      # Serialized Random Forest classifier
-    ├── antigravity_text_model.pkl     # Pre-trained NLP text classifier
-    ├── antigravity_vectorizer.pkl     # Pre-trained TF-IDF vectorizer
-    ├── antigravity_logs.db            # SQLite operational database (logs, threats, whitelist)
-    └── datasets/                      # Phishing, spam, and legitimate training datasets
-        ├── dataset.csv                # UCI tabular phishing features (11,000+ samples)
+    ├── main.py                        # FastAPI application & real-time engine
+    ├── feature_extractor.py           # 22-Feature engineering module
+    ├── train_modern_url_model.py      # Modern training pipeline (PhishTank + Tranco)
+    ├── dashboard.html                 # WebSocket-enabled SOC & Forensics console
+    ├── antigravity_url_model.pkl      # Calibrated Random Forest model (98.31% Acc)
+    ├── antigravity_logs.db            # SQLite operational database (25k+ threat intel)
+    └── datasets/                      # Phishing benchmark datasets
+        ├── dataset.csv                # UCI tabular phishing features
         ├── uci-ml-phishing-dataset.csv# UCI dataset mirror
         ├── Nazario.csv                # Phishing email corpus
         ├── SpamAssasin.csv            # SpamAssassin benchmark corpus
-        ├── CEAS_08.csv                # CEAS 2008 phishing corpus
         └── spam.csv                   # SMS/Message spam dataset
 ```
 
@@ -185,17 +228,17 @@ AntiGravity/
 
 2. **Install required dependencies:**
    ```bash
-   pip3 install fastapi uvicorn requests beautifulsoup4 scikit-learn pandas joblib
+   pip3 install fastapi uvicorn requests beautifulsoup4 scikit-learn pandas joblib websockets
    ```
 
 3. **Start the AI Engine:**
    ```bash
    python3 ai_engine/main.py
    ```
-   *The server will start on `http://127.0.0.1:8001`.*
+   *The server starts on `http://127.0.0.1:8001`.*
 
 4. **Verify the SOC Dashboard:**
-   Open [http://127.0.0.1:8001/dashboard](http://127.0.0.1:8001/dashboard) in your web browser. You should see the live status indicator (`CANLI`).
+   Open [http://127.0.0.1:8001/dashboard](http://127.0.0.1:8001/dashboard) in your web browser. You will see the live WebSocket beacon (`CANLI (WS)`).
 
 ---
 
@@ -211,45 +254,52 @@ AntiGravity/
    ```
    AntiGravity/browser_agent
    ```
-5. AntiGravity is now active! As you browse, navigation events are analyzed in real time.
+5. Click the extension icon in your browser toolbar to open the **AntiGravity Security Popup**!
 
 ---
 
 ## 📡 API Reference
 
-The FastAPI backend exposes the following endpoints:
+The FastAPI backend exposes the following REST & WebSocket endpoints:
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/analyze` | Primary analysis endpoint used by the Chrome Agent. |
-| `GET` | `/api/logs` | Returns aggregated scan statistics and the latest 500 log events. |
-| `GET` | `/api/details/{log_id}` | Retrieves full diagnostic metadata for a specific incident. |
-| `GET` | `/api/evidence/{log_id}` | Downloads sandboxed raw HTML evidence for an incident. |
-| `GET` | `/api/export-report` | Generates a JSON forensic audit report with SHA-256 integrity hash. |
-| `GET` | `/api/whitelist` | Lists all operator-configured whitelisted domains. |
+| `WS`   | `/ws/logs` | Real-time WebSocket stream pushing new security events to the SOC. |
+| `POST` | `/api/report-phish`| Submits user-reported phishing links into threat intelligence. |
+| `GET`  | `/api/logs` | Returns aggregated scan statistics and the latest 500 log events. |
+| `GET`  | `/api/details/{log_id}` | Retrieves full diagnostic metadata for a specific incident. |
+| `GET`  | `/api/evidence/{log_id}` | Downloads sandboxed raw HTML evidence for an incident. |
+| `GET`  | `/api/export-report` | Generates a JSON forensic audit report with SHA-256 integrity hash. |
+| `GET`  | `/api/whitelist` | Lists all operator-configured whitelisted domains. |
 | `POST` | `/api/whitelist/add` | Adds a domain to the permanent whitelist. |
 | `POST` | `/api/whitelist/remove` | Removes a domain from the whitelist. |
 | `DELETE`| `/api/logs` | Clears all operational logs from the SQLite database. |
-| `GET` | `/dashboard` | Serves the interactive SOC Operations Center web interface. |
+| `GET`  | `/dashboard` | Serves the interactive SOC Operations Center web interface. |
 
 ---
 
-## 🧠 Machine Learning & Model Training
+## 🧠 Machine Learning & Model Training (98.31% Accuracy)
 
-The URL classification model is trained via `train_models.py` using standard supervised learning techniques on lexical and structural domain features:
+The model is trained using `train_modern_url_model.py` on 24,000 real-world samples (12,000 active PhishTank malicious URLs + 12,000 top web properties):
 
 ```bash
-python3 ai_engine/train_models.py
+python3 ai_engine/train_modern_url_model.py
 ```
 
-### Feature Engineering
-The model inspects URLs across key indicators:
-* **IP Address in URL**: Flags raw IP address hostnames (e.g. `http://192.168.1.1/login`).
-* **URL Length Thresholds**: Standardizes character length anomalies.
-* **URL Shorteners**: Detects redirection services (`bit.ly`, `tinyurl`, `goo.gl`, etc.).
-* **Lexical Markers**: Flags `@` symbol credentials and double-slash `//` redirect patterns.
-* **Domain Structure**: Counts subdomain depth and detects hyphens in domains (`-`).
-* **TLD Reputation**: Scores high-risk top-level domains (`.xyz`, `.top`, `.tk`, `.ml`, `.site`, etc.).
+### Evaluation Benchmark
+* **Accuracy:** `98.31%`
+* **ROC-AUC Score:** `0.9994`
+* **Precision (Phishing):** `0.98`
+* **Recall (Phishing):** `0.99`
+
+```
+Confusion Matrix:
+  True Negatives (Safe):      2347
+  False Positives (Alarm):    53
+  False Negatives (Missed):   28
+  True Positives (Blocked):   2372
+```
 
 ---
 

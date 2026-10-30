@@ -8,6 +8,10 @@ window.addEventListener("load", () => {
 
     if (currentUrl.includes("127.0.0.1:8001") || currentUrl.startsWith("chrome-extension://")) return;
 
+    // Zero-Day Trap: Sayfadaki kimlik avı formları ve kart giriş alanlarını tara
+    const hasPassword = document.querySelector('input[type="password"]') !== null;
+    const hasCreditCard = document.querySelector('input[autocomplete*="cc"], input[name*="card"], input[name*="cvv"], input[name*="cvc"], input[id*="card"]') !== null;
+
     // DOM Gözlemcisi: Sayfaya sonradan dinamik eklenen şüpheli iframe veya scriptleri engeller
     try {
         const observer = new MutationObserver((mutations) => {
@@ -37,7 +41,9 @@ window.addEventListener("load", () => {
                 action: "analyze", 
                 url: currentUrl, 
                 page_text: pageText,
-                html_source: htmlSource 
+                html_source: htmlSource,
+                has_password_field: hasPassword,
+                has_credit_card_field: hasCreditCard
             },
             (response) => {
                 if (chrome.runtime.lastError || !response) return;

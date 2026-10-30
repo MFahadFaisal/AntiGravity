@@ -1,6 +1,9 @@
+const tabSecurityStatus = {};
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // 1. Tehdit / Sayfa Analiz İstemi
     if (request.action === "analyze") {
+        const tabId = sender?.tab?.id || "active";
         fetch("http://127.0.0.1:8001/analyze", {
             method: "POST",
             headers: {
@@ -9,16 +12,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             body: JSON.stringify({
                 url: request.url,
                 page_text: request.page_text,
-                html_source: request.html_source
+                html_source: request.html_source,
+                has_password_field: Boolean(request.has_password_field),
+                has_credit_card_field: Boolean(request.has_credit_card_field)
             })
         })
         .then(response => response.json())
         .then(data => {
+            tabSecurityStatus[tabId] = {
+                url: request.url,
+                data: data,
+                timestamp: Date.now()
+            };
             sendResponse(data);
         })
         .catch(error => {
             console.error("AntiGravity AI Engine Bağlantı Hatası:", error);
-            sendResponse({ is_fake: false, details: "Sunucuya ulaşılamadı" });
+            sendResponse({ is_fake: false, details: "Sunucuya ulaşılamadı", status: "offline" });
         });
 
         return true; // Asenkron yanıt için kesinlikle gerekli
@@ -28,8 +38,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "showNotification") {
         chrome.notifications.create({
             type: "basic",
-            iconUrl: "icon.png", // Varsa uzantı klasöründeki ikon
-            title: "🛡️ Adli Güvenlik Uyarısı",
+            iconUrl: "icon.png",
+            title: "🛡️ AntiGravity Adli Güvenlik Uyarısı",
             message: request.message || "Zararlı veya şüpheli bir bağlantı engellendi!"
         }, (notificationId) => {
             if (chrome.runtime.lastError) {
@@ -37,5 +47,40 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         });
         sendResponse({ status: "success" });
+        return true;
+    }
+
+    // 3. Popup Arayüzü için Aktif Sekme Durumu
+    if (request.action === "getTabStatus") {
+        const tabId = request.tabId || "active";
+        const result = tabSecurityStatus[tabId] || tabSecurityStatus["active"] || null;
+        sendResponse({ status: "success", result });
+        return true;
+    }
+
+    // 4. Şüpheli URL Bildirimi (Report Phishing)
+    if (request.action === "reportPhish") {
+        fetch("http://127.0.0.1:8001/api/report-phish", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: request.url, reason: request.reason || "Kullanıcı Bildirimi" })
+        })
+        .then(res => res.json())
+        .then(data => sendResponse(data))
+        .catch(err => sendResponse({ status: "error", message: "Sunucuya bağlanılamadı" }));
+        return true;
+    }
+
+    // 5. Hızlı Beyaz Liste Ekleme
+    if (request.action === "addWhitelist") {
+        fetch("http://127.0.0.1:8001/api/whitelist/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ domain: request.domain })
+        })
+        .then(res => res.json())
+        .then(data => sendResponse(data))
+        .catch(err => sendResponse({ status: "error", message: "Sunucuya bağlanılamadı" }));
+        return true;
     }
 });

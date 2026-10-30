@@ -580,22 +580,63 @@
         }
     }
 
-    function setConn(ok) {
+    function setConn(ok, customText) {
         const box = $('liveBox');
         box.classList.toggle('offline', !ok);
         box.classList.toggle('paused', ok && !live);
-        $('liveText').textContent = !ok ? 'BAĞLANTI YOK' : (live ? 'CANLI' : 'DURAKLATILDI');
+        $('liveText').textContent = !ok ? 'BAĞLANTI YOK' : (live ? (customText || 'CANLI') : 'DURAKLATILDI');
         if (ok) {
             const n = new Date(), p = x => String(x).padStart(2, '0');
             $('lastUpdate').textContent = `Son güncelleme: ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
         }
     }
 
+    let ws = null;
+    function initWebSocket() {
+        if (!live) return;
+        const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsHost = location.protocol === 'file:' ? '127.0.0.1:8001' : (location.host || '127.0.0.1:8001');
+        const wsUrl = `${wsProto}//${wsHost}/ws/logs`;
+        try {
+            if (ws) ws.close();
+            ws = new WebSocket(wsUrl);
+            ws.onopen = () => {
+                setConn(true, 'CANLI (WS)');
+            };
+            ws.onmessage = (event) => {
+                if (!live) return;
+                try {
+                    const newLog = JSON.parse(event.data);
+                    if (newLog && newLog.id) {
+                        allLogs.unshift(newLog);
+                        stats.total += 1;
+                        if (getActionStatus(newLog) === 'blocked') stats.blocked += 1;
+                        else if (getActionStatus(newLog) === 'safe') stats.safe += 1;
+                        renderAll();
+                        toast(`Yeni Olay: ${newLog.hedef_url || newLog.url}`, newLog.action === 'BLOCK' ? 'error' : 'info');
+                    }
+                } catch(e) {}
+            };
+            ws.onclose = () => {
+                setConn(true, 'CANLI (POLL)');
+                setTimeout(() => { if (live) initWebSocket(); }, 4000);
+            };
+            ws.onerror = () => {
+                try { ws.close(); } catch(e) {}
+            };
+        } catch(e) {}
+    }
+
     function toggleLive() {
         live = !live;
         $('liveBtn').textContent = live ? 'Akışı Duraklat' : 'Akışı Sürdür';
         setConn(!$('liveBox').classList.contains('offline'));
-        if (live) fetchLogs();
+        if (live) {
+            initWebSocket();
+            fetchLogs();
+        } else if (ws) {
+            ws.close();
+        }
     }
 
     /* ---------- Çizim ---------- */
@@ -964,8 +1005,9 @@
     (function init() {
         const d = new Date(), p = n => String(n).padStart(2, '0');
         $('caseId').textContent = `AG-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
-        setInterval(() => { if (live && !document.hidden) fetchLogs(); }, 3000);
+        setInterval(() => { if (live && !document.hidden) fetchLogs(); }, 6000);
         fetchLogs();
+        initWebSocket();
         fetchWhitelist();
     })();
 </script>

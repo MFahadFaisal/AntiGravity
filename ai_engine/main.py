@@ -1,5 +1,3 @@
-import requests
-from bs4 import BeautifulSoup
 import os
 import re
 import json
@@ -7,16 +5,30 @@ import sqlite3
 import hashlib
 import datetime
 import threading
+import asyncio
 from contextlib import contextmanager
 from urllib.parse import urlparse, parse_qs
 
+import requests
+from bs4 import BeautifulSoup
 import joblib
-from fastapi import FastAPI, Request
+import pandas as pd
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel
 
-app = FastAPI(title="AntiGravity SOC - AI Model Engine")
+# Import our custom feature engineering & zero-day detection engine
+from feature_extractor import (
+    extract_features_vector,
+    extract_features_dict,
+    check_punycode,
+    check_brand_spoofing,
+    check_free_hosting,
+    FEATURE_NAMES
+)
+
+app = FastAPI(title="AntiGravity SOC - Real-Time Zero-Trust AI Engine", version="2.0.0")
 
 ALLOWED_ORIGIN_RE = re.compile(r"^(chrome-extension://[a-z]{32}|https?://(127\.0\.0\.1|localhost)(:\d+)?)$")
 
@@ -39,7 +51,31 @@ async def origin_guard(request: Request, call_next):
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, "antigravity_logs.db")
 MODEL_FILE = os.path.join(BASE_DIR, "antigravity_url_model.pkl")
-EVIDENCE_LIMIT = 150_000   
+EVIDENCE_LIMIT = 150_000
+
+# ------------------------------------------------------------------
+# WEBSOCKET REAL-TIME BROADCAST MANAGER
+# ------------------------------------------------------------------
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in list(self.active_connections):
+            try:
+                await connection.send_json(message)
+            except Exception:
+                self.disconnect(connection)
+
+ws_manager = ConnectionManager()
 
 # ------------------------------------------------------------------
 # VERİTABANI VE TEHDİT İSTİHBARATI
@@ -87,7 +123,7 @@ def init_db():
                 created_at TEXT
             )
         """)
-        
+
         conn.execute("""
             CREATE TABLE IF NOT EXISTS threat_intel (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,9 +141,9 @@ LOG_COLUMNS = (
     "(evidence IS NOT NULL AND evidence != '') AS has_evidence"
 )
 
-def save_log_to_db(log: dict):
+def save_log_to_db(log: dict) -> int:
     with db() as conn:
-        conn.execute("""
+        cursor = conn.execute("""
             INSERT INTO logs (
                 timestamp, time, date, url, domain, action, reason,
                 target_url, details, detector, created_at, source, url_score, text_score, status, evidence
@@ -118,6 +154,8 @@ def save_log_to_db(log: dict):
             log["detector"], log["created_at"], log["source"], log["url_score"],
             log["text_score"], log["status"], log.get("evidence")
         ))
+        log_id = cursor.lastrowid
+    return log_id
 
 def get_logs_from_db(limit: int = 500):
     with db() as conn:
@@ -131,12 +169,21 @@ def get_stats_from_db():
     return total, total - blocked, blocked
 
 # ------------------------------------------------------------------
-# MODEL
+# MODEL YÜKLEME (Modern 22-Özellikli Random Forest)
 # ------------------------------------------------------------------
-print("[*] AntiGravity AI Motoru Başlatılıyor...")
+print("[*] AntiGravity 2.0 AI Motoru Başlatılıyor...")
+url_model = None
 try:
-    url_model = joblib.load(MODEL_FILE)
-    print("[✓] URL Yapay Zeka Modeli Başarıyla Yüklendi.")
+    if os.path.exists(MODEL_FILE):
+        pkg = joblib.load(MODEL_FILE)
+        if isinstance(pkg, dict) and "model" in pkg:
+            url_model = pkg["model"]
+            print(f"[✓] Modern URL Modeli Başarıyla Yüklendi. (Doğruluk: %{pkg.get('accuracy', 0)*100:.2f})")
+        else:
+            url_model = pkg
+            print("[✓] URL Yapay Zeka Modeli Başarıyla Yüklendi.")
+    else:
+        print("[!] UYARI: Model dosyası bulunamadı. Lütfen train_modern_url_model.py çalıştırın.")
 except Exception as e:
     print(f"[!] HATA: Model yüklenemedi! {e}")
     url_model = None
@@ -148,19 +195,25 @@ class TrafficData(BaseModel):
     page_text: str = ""
     search_query: str = ""
     html_source: str = ""
+    has_password_field: bool = False
+    has_credit_card_field: bool = False
 
 class DomainBody(BaseModel):
     domain: str = ""
+
+class ReportPhishBody(BaseModel):
+    url: str = ""
+    reason: str = "Kullanıcı Bildirimi"
 
 # ------------------------------------------------------------------
 # ANAHTAR KELİMELER, OSINT / PHISHTANK FEED & SİSTEM KORUMASI
 # ------------------------------------------------------------------
 OSINT_CACHE = {}
 
-# Sistem seviyesinde asla engellenmeyecek temel güvenli servisler
 SYSTEM_SAFE_DOMAINS = (
-    "google.com", "gemini.google.com", "youtube.com", "gstatic.com", 
-    "googleapis.com", "openai.com", "chatgpt.com", "github.com", "127.0.0.1", "localhost"
+    "google.com", "gemini.google.com", "youtube.com", "gstatic.com",
+    "googleapis.com", "openai.com", "chatgpt.com", "github.com",
+    "microsoft.com", "apple.com", "127.0.0.1", "localhost"
 )
 
 def is_system_safe(domain: str) -> bool:
@@ -168,7 +221,6 @@ def is_system_safe(domain: str) -> bool:
     return any(clean == d or clean.endswith("." + d) for d in SYSTEM_SAFE_DOMAINS)
 
 def shorten_url_for_display(url: str, max_len: int = 40) -> str:
-    """Bildirimler için linkleri temizler ve kısaltır."""
     clean = url.replace("https://", "").replace("http://", "").replace("www.", "")
     if len(clean) > max_len:
         return clean[:max_len-3] + "..."
@@ -184,7 +236,6 @@ EXPLICIT_TEXT_RE = re.compile(
 GAMBLING_RE = re.compile(r"kumar|bahis|casino|iddaa|slot|rulet|poker|jackpot", re.IGNORECASE)
 
 LINK_CHECK_MARKER = "<div>Tıklanan Link Analizi</div>"
-
 SEARCH_ENGINE_HOSTS = ("google.", "bing.com", "yahoo.com", "duckduckgo.com", "yandex.", "ecosia.org", "search.brave.com")
 SEARCH_QUERY_KEYS = ("q", "query", "p", "text", "search_query", "wd")
 
@@ -222,7 +273,7 @@ def update_phishtank_feed():
                             "INSERT OR IGNORE INTO threat_intel (domain, source, added_at) VALUES (?, ?, ?)",
                             (domain, "PhishTank", now_str)
                         )
-            print(f"[✓] PhishTank Feed Güncellendi: Veritabanına yeni tehditler eklendi.")
+            print("[✓] PhishTank Feed Güncellendi: Veritabanına yeni tehditler eklendi.")
     except Exception as e:
         print(f"[!] PhishTank Feed Güncelleme Hatası: {e}")
 
@@ -230,12 +281,10 @@ threading.Thread(target=update_phishtank_feed, daemon=True).start()
 
 def check_local_threat_intel(domain: str):
     clean_domain = domain.replace("www.", "").lower()
-    # Sistem servisi ise PhishTank taramasını atla (Hatalı bloklamayı önler)
     if is_system_safe(clean_domain):
         return {"is_scam": False}
 
     with db() as conn:
-        # ESKİ KODDAKİ HATA DÜZELTİLDİ: "LIKE" yerine "Tam Eşleşme" yapıldı
         row = conn.execute("SELECT source FROM threat_intel WHERE domain = ?", (clean_domain,)).fetchone()
     if row:
         return {"is_scam": True, "details": f"Tehdit İstihbaratı ({row['source']}): Veritabanında onaylanmış sahte/zararlı site!"}
@@ -243,26 +292,25 @@ def check_local_threat_intel(domain: str):
 
 def check_domain_reputation(domain: str):
     clean_domain = domain.replace("www.", "").lower()
-    
     if clean_domain in OSINT_CACHE:
         return OSINT_CACHE[clean_domain]
-    
-    risk_keywords = ["şikayet", "dolandırıcı", "sahte", "paramı vermedi", "uzak durun", "güvenilmez", "mağdur", "yasadışı"]
-    query = f'"{clean_domain}" şikayet OR dolandırıcı'
-    
+
+    risk_keywords = ["şikayet", "dolandırıcı", "sahte", "paramı vermedi", "uzak durun", "güvenilmez", "mağdur", "yasadışı", "phishing", "scam"]
+    query = f'"{clean_domain}" şikayet OR dolandırıcı OR scam'
+
     search_engines = [
         f"https://html.duckduckgo.com/html/?q={query}",
         f"https://www.bing.com/search?q={query}",
         f"https://search.yahoo.com/search?p={query}"
     ]
-    
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
     }
-    
+
     combined_text = ""
     success_count = 0
-    
+
     for search_url in search_engines:
         try:
             response = requests.get(search_url, headers=headers, timeout=2)
@@ -271,41 +319,19 @@ def check_domain_reputation(domain: str):
                 combined_text += " " + soup.get_text(separator=' ').lower()
                 success_count += 1
         except Exception:
-            pass 
-            
+            pass
+
     if success_count == 0:
         return {"is_scam": False, "details": "İstihbarat: Arama motorlarına erişilemedi"}
-        
+
     risk_count = sum(1 for word in risk_keywords if word in combined_text)
-    
-    if risk_count >= 3: 
+    if risk_count >= 3:
         result = {"is_scam": True, "details": f"OSINT Tespiti: Çoklu kaynakta {risk_count} şikayet/dolandırıcılık bulgusu!"}
     else:
         result = {"is_scam": False, "details": "OSINT Tespiti: Temiz"}
-        
+
     OSINT_CACHE[clean_domain] = result
     return result
-
-def extract_url_features(url: str):
-    parsed = urlparse(url)
-    domain = parsed.netloc if parsed.netloc else parsed.path
-
-    having_ip = 1 if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", domain) else -1
-    url_length = 1 if len(url) >= 75 else (-1 if len(url) < 54 else 0)
-    shortening = 1 if any(short in url for short in ["bit.ly", "tinyurl", "goo.gl", "t.co", "is.gd"]) else -1
-    at_symbol = 1 if "@" in url else -1
-    double_slash = 1 if url.rfind("//") > 7 else -1
-    prefix_suffix = 1 if "-" in domain else -1
-    dots = domain.count(".")
-    subdomain = 1 if dots > 3 else (0 if dots == 3 else -1)
-    suspicious_tld = 1 if any(domain.endswith(tld) for tld in [".xyz", ".top", ".tk", ".ml", ".cf", ".gq", ".site", ".online", ".club"]) else -1
-
-    features = [
-        having_ip, url_length, shortening, at_symbol, double_slash,
-        prefix_suffix, subdomain, suspicious_tld
-    ] + [-1] * 21
-
-    return [features]
 
 # ------------------------------------------------------------------
 # BEYAZ LİSTE YARDIMCILARI
@@ -329,7 +355,7 @@ def normalize_domain(value: str) -> str:
         host = host.encode("idna").decode("ascii")
     except UnicodeError:
         return ""
-    if re.fullmatch(r"[\d.]+", host):      
+    if re.fullmatch(r"[\d.]+", host):
         return ""
     return host if DOMAIN_RE.match(host) else ""
 
@@ -348,10 +374,10 @@ def find_whitelisted(host: str):
     return None
 
 # ------------------------------------------------------------------
-# 1. EKLENTİNİN BEKLEDİĞİ YANIT (YENİ "ŞÜPHELİ" MANTIĞI EKLENDİ)
+# 1. EKLENTİNİN BEKLEDİĞİ KARAR KAPISI (/analyze)
 # ------------------------------------------------------------------
 @app.post("/analyze")
-def gatekeeper_decision(data: TrafficData):
+async def gatekeeper_decision(data: TrafficData):
     url = data.url or ""
     parsed = urlparse(url)
     domain = data.domain or parsed.netloc
@@ -361,9 +387,9 @@ def gatekeeper_decision(data: TrafficData):
     search_page = is_search_page(url)
     whitelisted = find_whitelisted(parsed.hostname or "")
 
-    # Toast bildirimi ve loglar için temiz ve kısa URL oluştur
     short_url = shorten_url_for_display(url)
 
+    # 1. Heuristic Pattern Matching (Adult / Gambling)
     explicit_found = bool(
         EXPLICIT_URL_RE.search(url_target)
         or EXPLICIT_URL_RE.search(query)
@@ -376,60 +402,101 @@ def gatekeeper_decision(data: TrafficData):
         or (is_link_check and GAMBLING_RE.search(data.page_text or ""))
     )
 
+    # 2. Advanced Zero-Day Feature Engineering
+    features_vec = extract_features_vector(url)
+    features_df = pd.DataFrame([features_vec], columns=FEATURE_NAMES)
+    features_dict = extract_features_dict(url)
+
+    punycode_found = bool(check_punycode(domain))
+    brand_spoof_found = bool(check_brand_spoofing(url, domain))
+    free_host_found = bool(check_free_hosting(domain))
+    credential_trap = bool(data.has_password_field and free_host_found)
+
     local_threat = {"is_scam": False}
     osint_result = {"is_scam": False, "details": ""}
     phishing_found = False
-    ai_url_prediction = 0
+    ai_confidence = 0.0
 
-    features = extract_url_features(url)
-    suspicious_tld = features[0][7] == 1
-
-    # DOKUNULMAZ SİSTEM BEYAZ LİSTESİ (PhishTank ve AI modellerinden korur)
+    # 3. Model Prediction (Trained on Modern 22 Lexical Features)
     if is_system_safe(domain):
         phishing_found = False
     else:
         if not whitelisted:
             local_threat = check_local_threat_intel(domain)
+
         if url_model:
             try:
-                ai_url_prediction = int(url_model.predict(features)[0])
+                preds = url_model.predict(features_df)
+                probs = url_model.predict_proba(features_df)[0]
+                ai_confidence = float(probs[1]) if len(probs) > 1 else (1.0 if preds[0] == 1 else 0.0)
+                phishing_found = (preds[0] == 1 and ai_confidence >= 0.60) or (features_dict["suspicious_tld"] == 1 and ai_confidence >= 0.40)
             except Exception:
-                pass
-        phishing_found = ai_url_prediction == 1 or suspicious_tld
+                phishing_found = features_dict["suspicious_tld"] == 1 or brand_spoof_found
 
     action = "ALLOW"
     reason = "AI Model: Temiz ve Güvenli Trafik"
     is_hard_block = False
     show_toast = False
-    url_score = 0
+    url_score = int(ai_confidence * 100)
     text_score = 0
+    mitre_tag = "None"
 
     if not whitelisted and not local_threat["is_scam"] and not is_system_safe(domain):
         osint_result = check_domain_reputation(domain)
 
-    # KARAR AĞACI
+    # --------------------------------------------------------------
+    # KARAR AĞACI (DECISION HIERARCHY)
+    # --------------------------------------------------------------
     if whitelisted:
         reason = f"Beyaz Liste: {whitelisted} güvenli olarak işaretlendi"
-        
+
+    elif is_system_safe(domain):
+        reason = "Sistem Dokunulmaz Servisi: Güvenli Altyapı"
+
+    elif punycode_found:
+        action = "BLOCK"
+        is_hard_block = True
+        reason = f"Adli Güvenlik Tespiti: '{short_url}' Uluslararası Karakter Sahtekarlığı (IDN/Punycode Homograph Saldırısı)!"
+        url_score = 100
+        mitre_tag = "T1566.002: Homograph Phishing"
+
+    elif credential_trap:
+        action = "BLOCK"
+        is_hard_block = True
+        reason = f"Kimlik Avı Koruması: '{short_url}' Ücretsiz bulut altyapısında yetkisiz şifre toplama formu tespit edildi!"
+        url_score = 100
+        text_score = 100
+        mitre_tag = "T1056: Input Capture (Credential Harvesting)"
+
+    elif brand_spoof_found:
+        action = "BLOCK"
+        is_hard_block = True
+        reason = f"AI Model Tespiti: '{short_url}' Sahte Marka Taklidi (Brand Impersonation / Spoofing)!"
+        url_score = 99
+        mitre_tag = "T1566.002: Spearphishing Link"
+
     elif explicit_found:
         action = "BLOCK"
         is_hard_block = True
-        reason = f"AI Model Koruması: '{short_url}' adresinde Cinsel İçerik Tespit Edildi!"
+        reason = f"AI Model Koruması: '{short_url}' adresinde Cinsel / Yasaklı İçerik Tespit Edildi!"
         text_score = 100
-        
+        mitre_tag = "Policy: Explicit Content Violation"
+
     elif local_threat["is_scam"]:
         url_score = 100
+        mitre_tag = "T1566.002: Verified Phishing Feed"
         if search_page:
             action = "SUSPICIOUS"
             show_toast = True
-            reason = "Arama Motoru Uyarısı: Sonuçlarda sahte/zararlı site (PhishTank) mevcut."
+            reason = "Arama Motoru Uyarısı: Sonuçlarda onaylı sahte site (PhishTank) bağlantısı mevcut."
         else:
             action = "BLOCK"
             is_hard_block = True
             reason = f"PhishTank İstihbaratı: '{short_url}' onaylanmış sahte site!"
-            
+
     elif phishing_found:
-        url_score = 99
+        url_score = max(url_score, 95)
+        mitre_tag = "T1566.002: Machine Learning Phishing Detection"
         if search_page:
             action = "SUSPICIOUS"
             show_toast = True
@@ -437,10 +504,11 @@ def gatekeeper_decision(data: TrafficData):
         else:
             action = "BLOCK"
             is_hard_block = True
-            reason = f"AI Model Tespiti: '{short_url}' Sahte/Oltalama (Phishing) URL yapısı!"
-            
+            reason = f"AI Model Tespiti: '{short_url}' Sahte/Oltalama URL Yapısı (%{url_score} Risk)!"
+
     elif osint_result["is_scam"]:
-        url_score = 98 
+        url_score = 98
+        mitre_tag = "OSINT: Fraudulent Domain Signals"
         if search_page:
             action = "SUSPICIOUS"
             show_toast = True
@@ -448,11 +516,12 @@ def gatekeeper_decision(data: TrafficData):
         else:
             action = "BLOCK"
             is_hard_block = True
-            reason = f"OSINT Tespiti: '{short_url}' hakkında şikayet/dolandırıcılık bulgusu var!"
-            
+            reason = f"OSINT Tespiti: '{short_url}' hakkında çoklu dolandırıcılık/şikayet bulgusu!"
+
     elif gambling_found:
         url_score = 90
         text_score = 80
+        mitre_tag = "Policy: Illegal Gambling"
         if is_link_check:
             action = "BLOCK"
             is_hard_block = True
@@ -484,15 +553,21 @@ def gatekeeper_decision(data: TrafficData):
         "reason": reason,
         "target_url": url,
         "details": reason,
-        "detector": "AntiGravity AI Engine",
+        "detector": f"AntiGravity AI Engine (v2.0 - {mitre_tag})",
         "created_at": now_timestamp,
-        "source": "AI / OSINT / Intel",
+        "source": "AI / OSINT / Intel / Heuristics",
         "url_score": url_score,
         "text_score": text_score,
         "status": action,
         "evidence": evidence,
     }
-    save_log_to_db(log_entry)
+    log_id = save_log_to_db(log_entry)
+    log_entry["id"] = log_id
+    log_entry["has_evidence"] = bool(evidence)
+
+    # Broadcast instantaneously to all connected SOC analysts over WebSocket
+    formatted = format_log(log_entry)
+    asyncio.create_task(ws_manager.broadcast(formatted))
 
     return {
         "is_fake": blocked,
@@ -506,17 +581,35 @@ def gatekeeper_decision(data: TrafficData):
         "reason": reason,
         "url_score": url_score,
         "text_score": text_score,
+        "mitre_tag": mitre_tag,
     }
 
 # ------------------------------------------------------------------
-# 2. DASHBOARD API
+# 2. WEBSOCKET ENDPOINT
+# ------------------------------------------------------------------
+@app.websocket("/ws/logs")
+async def websocket_logs_endpoint(websocket: WebSocket):
+    await ws_manager.connect(websocket)
+    try:
+        while True:
+            # Keep socket alive and respond to client pings
+            msg = await websocket.receive_text()
+            if msg == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception:
+        ws_manager.disconnect(websocket)
+
+# ------------------------------------------------------------------
+# 3. DASHBOARD API
 # ------------------------------------------------------------------
 def format_log(log: dict) -> dict:
     act = (log.get("action") or "ALLOW").upper()
     blocked = act == "BLOCK"
     suspicious = act == "SUSPICIOUS"
     reason = log.get("reason") or log.get("details") or ""
-    
+
     if blocked:
         durum = "Engellendi"
     elif suspicious:
@@ -583,7 +676,23 @@ def clear_logs():
     return _clear_logs()
 
 # ------------------------------------------------------------------
-# 3. ADLİ RAPOR VE KANIT
+# 4. KULLANICI ŞÜPHELİ URL BİLDİRİMİ (REPORT PHISHING)
+# ------------------------------------------------------------------
+@app.post("/api/report-phish")
+def report_phish(body: ReportPhishBody):
+    domain = normalize_domain(body.url)
+    if not domain:
+        return JSONResponse(status_code=400, content={"status": "error", "message": "Geçerli bir web adresi girin."})
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with db() as conn:
+        conn.execute(
+            "INSERT OR IGNORE INTO threat_intel (domain, source, added_at) VALUES (?, ?, ?)",
+            (domain, f"User Report: {body.reason}", now_str)
+        )
+    return {"status": "success", "message": f"'{domain}' adresi tehdit istihbarat havuzuna eklendi."}
+
+# ------------------------------------------------------------------
+# 5. ADLİ RAPOR VE KANIT İNDİRME
 # ------------------------------------------------------------------
 @app.get("/api/export-report")
 def export_report():
@@ -607,7 +716,7 @@ def export_report():
         "ozet": {"total": total, "safe": total - blocked, "blocked": blocked},
         "butunluk": {
             "algoritma": "SHA-256",
-            "aciklama": "kayitlar alaninin json.dumps(kayitlar, ensure_ascii=False, sort_keys=True) çıktısının özeti",
+            "aciklama": "kayitlar alaninin json.dumps(kayitlar, ensure_ascii=False, sort_keys=True) ciktisinin ozeti",
             "deger": digest,
         },
         "kayitlar": records,
@@ -637,7 +746,7 @@ def get_evidence(log_id: int):
     )
 
 # ------------------------------------------------------------------
-# 4. BEYAZ LİSTE
+# 6. BEYAZ LİSTE YÖNETİMİ
 # ------------------------------------------------------------------
 @app.get("/api/whitelist")
 def list_whitelist():
@@ -674,7 +783,7 @@ def remove_whitelist(body: DomainBody):
     return {"status": "success", "message": f"{domain} beyaz listeden çıkarıldı."}
 
 # ------------------------------------------------------------------
-# 5. DASHBOARD SAYFASI
+# 7. DASHBOARD ARAYÜZÜ
 # ------------------------------------------------------------------
 @app.get("/")
 @app.get("/dashboard")

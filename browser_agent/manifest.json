@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "AntiGravity Agent",
-  "version": "1.0",
-  "description": "Gerçek zamanlı oltalama ve sahte içerik tespiti.",
+  "version": "2.0",
+  "description": "Zero-Trust Real-Time Phishing and Web Threat Defense Agent.",
   "permissions": [
     "activeTab",
+    "tabs",
     "scripting",
     "notifications"
   ],
@@ -12,6 +13,10 @@
     "http://127.0.0.1:8001/*",
     "<all_urls>"
   ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AntiGravity Security Agent"
+  },
   "background": {
     "service_worker": "background.js"
   },
