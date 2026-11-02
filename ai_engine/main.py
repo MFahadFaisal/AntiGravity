@@ -878,14 +878,23 @@ def export_report():
 
     now = datetime.datetime.now()
     report = {
+        "created_at": now.isoformat(timespec="seconds"),
         "olusturulma": now.isoformat(timespec="seconds"),
+        "report_sha256_digest": digest,
+        "total_incidents": total,
         "ozet": {"total": total, "safe": total - blocked, "blocked": blocked},
+        "summary": {"total": total, "safe": total - blocked, "blocked": blocked},
         "butunluk": {
             "algoritma": "SHA-256",
             "aciklama": "kayitlar alaninin json.dumps(kayitlar, ensure_ascii=False, sort_keys=True) ciktisinin ozeti",
             "deger": digest,
         },
+        "integrity": {
+            "algorithm": "SHA-256",
+            "hash": digest
+        },
         "kayitlar": records,
+        "incidents": records,
     }
     filename = f"adli-rapor-{now.strftime('%Y%m%d-%H%M')}.json"
     return JSONResponse(content=report, headers={"Content-Disposition": f'attachment; filename="{filename}"'})

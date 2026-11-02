@@ -187,3 +187,6 @@ def check_visual_spoofing(favicon_url: str, current_domain: str, timeout: float 
         res = {"is_visual_spoof": False}
         VISUAL_CACHE[cache_key] = res
         return res
+
+# Backwards compatibility alias
+BRAND_DHASH_SIGNATURES = BRAND_SIGNATURES

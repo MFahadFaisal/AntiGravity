@@ -1,0 +1,191 @@
+{
+  "timestamp": "2026-11-02 16:45:52",
+  "total_checks": 26,
+  "passed_checks": 26,
+  "failed_checks": 0,
+  "duration_seconds": 4.0,
+  "results": [
+    {
+      "layer": "env",
+      "test": "Core Libraries",
+      "passed": true,
+      "message": "PyTorch 2.13.0, ONNX 1.23.2, Sklearn 1.9.0, FastAPI 0.139.2",
+      "latency_ms": 0.0
+    },
+    {
+      "layer": "ml",
+      "test": "32-D Feature Extractor",
+      "passed": true,
+      "message": "Extracted 32 features accurately (32 dict keys)",
+      "latency_ms": 0.86
+    },
+    {
+      "layer": "ml",
+      "test": "PKL Random Forest Model",
+      "passed": true,
+      "message": "Accuracy: 99.94%, ROC-AUC: 1.0000, Test Inference Prob: 93.0%",
+      "latency_ms": 208.86
+    },
+    {
+      "layer": "ml",
+      "test": "ONNX Model Runtime",
+      "passed": true,
+      "message": "Loaded ONNX session (1223.9 KB), Outputs: 2",
+      "latency_ms": 39.9
+    },
+    {
+      "layer": "ml",
+      "test": "Modern Phishing Dataset 2026",
+      "passed": true,
+      "message": "CSV exists (12.34 MB)",
+      "latency_ms": 0.0
+    },
+    {
+      "layer": "threat_intel",
+      "test": "Threat Feed Ingestion",
+      "passed": true,
+      "message": "25,575 active indicators loaded across feeds",
+      "latency_ms": 13.36
+    },
+    {
+      "layer": "threat_intel",
+      "test": "Threat Sync CLI Tool",
+      "passed": true,
+      "message": "Integrity check and schema validation passed",
+      "latency_ms": 0.0
+    },
+    {
+      "layer": "cv",
+      "test": "Perceptual dHash Engine",
+      "passed": true,
+      "message": "Identical image distance = 0, 36 brand signatures loaded",
+      "latency_ms": 22.0
+    },
+    {
+      "layer": "api",
+      "test": "GET /health",
+      "passed": true,
+      "message": "Health check responded HTTP 200",
+      "latency_ms": 4.55
+    },
+    {
+      "layer": "api",
+      "test": "GET /api/stats",
+      "passed": true,
+      "message": "SOC telemetry statistics responded HTTP 200",
+      "latency_ms": 1.65
+    },
+    {
+      "layer": "api",
+      "test": "GET /api/logs",
+      "passed": true,
+      "message": "Audit logs responded HTTP 200",
+      "latency_ms": 8.17
+    },
+    {
+      "layer": "api",
+      "test": "GET /api/threat-intel/stats",
+      "passed": true,
+      "message": "Threat intelligence summary responded HTTP 200",
+      "latency_ms": 4.93
+    },
+    {
+      "layer": "api",
+      "test": "GET /api/whitelist",
+      "passed": true,
+      "message": "Whitelist management responded HTTP 200",
+      "latency_ms": 1.27
+    },
+    {
+      "layer": "api",
+      "test": "GET /api/dns/stats",
+      "passed": true,
+      "message": "DNS Sinkhole statistics responded HTTP 200",
+      "latency_ms": 0.91
+    },
+    {
+      "layer": "api",
+      "test": "GET /api/dns/queries",
+      "passed": true,
+      "message": "DNS query ledger responded HTTP 200",
+      "latency_ms": 0.95
+    },
+    {
+      "layer": "api",
+      "test": "GET /api/model/weights",
+      "passed": true,
+      "message": "Client tree weights JSON responded HTTP 200",
+      "latency_ms": 2.97
+    },
+    {
+      "layer": "api",
+      "test": "GET /api/model/onnx",
+      "passed": true,
+      "message": "ONNX model download binary responded HTTP 200",
+      "latency_ms": 3.72
+    },
+    {
+      "layer": "api",
+      "test": "GET /api/export-report",
+      "passed": true,
+      "message": "Forensic dossier report responded HTTP 200",
+      "latency_ms": 3.89
+    },
+    {
+      "layer": "api",
+      "test": "POST /analyze (Phishing Block)",
+      "passed": true,
+      "message": "Threat blocked with score 99% (AI Model Tespiti: 'paypal-verification-c...)",
+      "latency_ms": 1493.82
+    },
+    {
+      "layer": "api",
+      "test": "POST /analyze (Benign Allow)",
+      "passed": true,
+      "message": "Legitimate search allowed with score 0%",
+      "latency_ms": 4.46
+    },
+    {
+      "layer": "dns",
+      "test": "Malicious Domain Sinkholing",
+      "passed": true,
+      "message": "paypal-security-update-center.com sinkholed to 0.0.0.0",
+      "latency_ms": 5.96
+    },
+    {
+      "layer": "dns",
+      "test": "Benign Recursive Resolution",
+      "passed": true,
+      "message": "apple.com resolved upstream to 17.253.144.10",
+      "latency_ms": 28.55
+    },
+    {
+      "layer": "js_engine",
+      "test": "Offline Edge Model (Node.js)",
+      "passed": true,
+      "message": "V2.5-enterprise (32 features), Google=safe, Phish=block (93%)",
+      "latency_ms": 348.17
+    },
+    {
+      "layer": "extension",
+      "test": "Manifest V3 Compliance",
+      "passed": true,
+      "message": "'AntiGravity Agent' v2.5, Service Worker: background.js",
+      "latency_ms": 0.0
+    },
+    {
+      "layer": "extension",
+      "test": "Extension Assets Presence",
+      "passed": true,
+      "message": "All 9 extension assets verified",
+      "latency_ms": 0.0
+    },
+    {
+      "layer": "forensics",
+      "test": "SHA-256 Chain of Custody",
+      "passed": true,
+      "message": "Valid SHA-256 digest (ff4e2657e113995a...), Records: 199",
+      "latency_ms": 14.85
+    }
+  ]
+}
