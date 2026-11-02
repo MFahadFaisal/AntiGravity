@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-11-02 16:45:52",
+  "timestamp": "2026-11-02 16:51:43",
   "total_checks": 26,
   "passed_checks": 26,
   "failed_checks": 0,
-  "duration_seconds": 4.0,
+  "duration_seconds": 2.69,
   "results": [
     {
       "layer": "env",
@@ -17,21 +17,21 @@
       "test": "32-D Feature Extractor",
       "passed": true,
       "message": "Extracted 32 features accurately (32 dict keys)",
-      "latency_ms": 0.86
+      "latency_ms": 1.13
     },
     {
       "layer": "ml",
       "test": "PKL Random Forest Model",
       "passed": true,
       "message": "Accuracy: 99.94%, ROC-AUC: 1.0000, Test Inference Prob: 93.0%",
-      "latency_ms": 208.86
+      "latency_ms": 236.23
     },
     {
       "layer": "ml",
       "test": "ONNX Model Runtime",
       "passed": true,
       "message": "Loaded ONNX session (1223.9 KB), Outputs: 2",
-      "latency_ms": 39.9
+      "latency_ms": 43.96
     },
     {
       "layer": "ml",
@@ -44,8 +44,8 @@
       "layer": "threat_intel",
       "test": "Threat Feed Ingestion",
       "passed": true,
-      "message": "25,575 active indicators loaded across feeds",
-      "latency_ms": 13.36
+      "message": "26,015 active indicators loaded across feeds",
+      "latency_ms": 9.18
     },
     {
       "layer": "threat_intel",
@@ -59,112 +59,112 @@
       "test": "Perceptual dHash Engine",
       "passed": true,
       "message": "Identical image distance = 0, 36 brand signatures loaded",
-      "latency_ms": 22.0
+      "latency_ms": 23.73
     },
     {
       "layer": "api",
       "test": "GET /health",
       "passed": true,
       "message": "Health check responded HTTP 200",
-      "latency_ms": 4.55
+      "latency_ms": 6.57
     },
     {
       "layer": "api",
       "test": "GET /api/stats",
       "passed": true,
       "message": "SOC telemetry statistics responded HTTP 200",
-      "latency_ms": 1.65
+      "latency_ms": 1.71
     },
     {
       "layer": "api",
       "test": "GET /api/logs",
       "passed": true,
       "message": "Audit logs responded HTTP 200",
-      "latency_ms": 8.17
+      "latency_ms": 8.14
     },
     {
       "layer": "api",
       "test": "GET /api/threat-intel/stats",
       "passed": true,
       "message": "Threat intelligence summary responded HTTP 200",
-      "latency_ms": 4.93
+      "latency_ms": 5.4
     },
     {
       "layer": "api",
       "test": "GET /api/whitelist",
       "passed": true,
       "message": "Whitelist management responded HTTP 200",
-      "latency_ms": 1.27
+      "latency_ms": 1.5
     },
     {
       "layer": "api",
       "test": "GET /api/dns/stats",
       "passed": true,
       "message": "DNS Sinkhole statistics responded HTTP 200",
-      "latency_ms": 0.91
+      "latency_ms": 0.99
     },
     {
       "layer": "api",
       "test": "GET /api/dns/queries",
       "passed": true,
       "message": "DNS query ledger responded HTTP 200",
-      "latency_ms": 0.95
+      "latency_ms": 0.87
     },
     {
       "layer": "api",
       "test": "GET /api/model/weights",
       "passed": true,
       "message": "Client tree weights JSON responded HTTP 200",
-      "latency_ms": 2.97
+      "latency_ms": 2.31
     },
     {
       "layer": "api",
       "test": "GET /api/model/onnx",
       "passed": true,
       "message": "ONNX model download binary responded HTTP 200",
-      "latency_ms": 3.72
+      "latency_ms": 3.37
     },
     {
       "layer": "api",
       "test": "GET /api/export-report",
       "passed": true,
       "message": "Forensic dossier report responded HTTP 200",
-      "latency_ms": 3.89
+      "latency_ms": 4.29
     },
     {
       "layer": "api",
       "test": "POST /analyze (Phishing Block)",
       "passed": true,
       "message": "Threat blocked with score 99% (AI Model Tespiti: 'paypal-verification-c...)",
-      "latency_ms": 1493.82
+      "latency_ms": 15.44
     },
     {
       "layer": "api",
       "test": "POST /analyze (Benign Allow)",
       "passed": true,
       "message": "Legitimate search allowed with score 0%",
-      "latency_ms": 4.46
+      "latency_ms": 5.08
     },
     {
       "layer": "dns",
       "test": "Malicious Domain Sinkholing",
       "passed": true,
       "message": "paypal-security-update-center.com sinkholed to 0.0.0.0",
-      "latency_ms": 5.96
+      "latency_ms": 4.59
     },
     {
       "layer": "dns",
       "test": "Benign Recursive Resolution",
       "passed": true,
       "message": "apple.com resolved upstream to 17.253.144.10",
-      "latency_ms": 28.55
+      "latency_ms": 59.32
     },
     {
       "layer": "js_engine",
       "test": "Offline Edge Model (Node.js)",
       "passed": true,
       "message": "V2.5-enterprise (32 features), Google=safe, Phish=block (93%)",
-      "latency_ms": 348.17
+      "latency_ms": 319.63
     },
     {
       "layer": "extension",
@@ -184,8 +184,8 @@
       "layer": "forensics",
       "test": "SHA-256 Chain of Custody",
       "passed": true,
-      "message": "Valid SHA-256 digest (ff4e2657e113995a...), Records: 199",
-      "latency_ms": 14.85
+      "message": "Valid SHA-256 digest (0e912da2f5bc7700...), Records: 220",
+      "latency_ms": 5.53
     }
   ]
 }

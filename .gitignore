@@ -10,3 +10,4 @@ node_modules/
 .DS_Store
 *.DS_Store
 ai_engine/datasets/CEAS_08.csv
+sync_metrics.json

@@ -63,5 +63,5 @@ jobs:
             echo "No new indicators or weight changes detected."
           else
             git commit -m "chore(threat-intel): automated nightly feed sync & ONNX parity [skip ci]"
-            git push origin main
+            git push origin main || echo "⚠️ Git push skipped. If needed, enable 'Read and write permissions' in GitHub Repo Settings -> Actions -> General -> Workflow permissions."
           fi

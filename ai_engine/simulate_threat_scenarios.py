@@ -1,5 +1,7 @@
 import time
 import json
+import os
+import sys
 import requests
 
 SERVER_URL = "http://127.0.0.1:8001"
@@ -100,12 +102,31 @@ TEST_SCENARIOS = [
     }
 ]
 
+def get_dispatcher():
+    """Detects whether to use live HTTP server or in-process TestClient."""
+    try:
+        r = requests.get(f"{SERVER_URL}/health", timeout=1.0)
+        if r.status_code == 200:
+            print("[*] Dispatcher: Live HTTP Server detected at http://127.0.0.1:8001")
+            return "live", None
+    except Exception:
+        pass
+
+    print("[*] Dispatcher: Starting in-process FastAPI TestClient (CI/Self-Healing mode)")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    if base_dir not in sys.path:
+        sys.path.insert(0, base_dir)
+    from main import app
+    from fastapi.testclient import TestClient
+    return "client", TestClient(app)
+
 def run_simulation():
     print("=" * 75)
     print("🛡️  ANTIGRAVITY SOC DEFENSE EVALUATION & THREAT SIMULATION RUNNER")
     print("=" * 75)
-    print(f"[*] Target Endpoint: {SERVER_URL}/analyze")
-    print(f"[*] Total Test Scenarios: {len(TEST_SCENARIOS)}\n")
+
+    mode, client = get_dispatcher()
+    print(f"[*] Execution Mode: {mode.upper()} | Total Test Scenarios: {len(TEST_SCENARIOS)}\n")
 
     results = []
 
@@ -113,7 +134,11 @@ def run_simulation():
         print(f"[{test['id']}] Executing: {test['name']} ({test['category']})...")
         t0 = time.perf_counter()
         try:
-            resp = requests.post(f"{SERVER_URL}/analyze", json=test["payload"], timeout=4.0)
+            if mode == "live":
+                resp = requests.post(f"{SERVER_URL}/analyze", json=test["payload"], timeout=4.0)
+            else:
+                resp = client.post("/analyze", json=test["payload"])
+
             latency_ms = (time.perf_counter() - t0) * 1000
             if resp.status_code == 200:
                 data = resp.json()
@@ -142,35 +167,41 @@ def run_simulation():
             else:
                 print(f"   └─ HTTP Error: {resp.status_code}")
         except Exception as e:
-            print(f"   └─ Connection Exception: {e}")
+            print(f"   └─ Request Exception: {e}")
 
-        time.sleep(0.15)
+        time.sleep(0.05)
 
     print("\n" + "=" * 75)
     print("📊 FETCHING FORENSIC DOSSIER & SYSTEM METRICS")
     print("=" * 75)
 
-    # 1. Fetch system statistics
-    stats_resp = requests.get(f"{SERVER_URL}/api/stats").json()
-    print(f"[*] Telemetry Ingestion Stats: Total={stats_resp.get('total')}, Benign={stats_resp.get('safe')}, Blocked={stats_resp.get('blocked')}, Threat Ratio={stats_resp.get('threat_ratio')}%")
+    try:
+        if mode == "live":
+            stats_resp = requests.get(f"{SERVER_URL}/api/stats", timeout=3.0).json()
+            report_resp = requests.get(f"{SERVER_URL}/api/export-report", timeout=3.0).json()
+        else:
+            stats_resp = client.get("/api/stats").json()
+            report_resp = client.get("/api/export-report").json()
 
-    # 2. Fetch export report with cryptographic digest
-    report_resp = requests.get(f"{SERVER_URL}/api/export-report").json()
-    digest = report_resp.get("butunluk", {}).get("deger", "N/A")
-    print(f"[*] Cryptographic Forensic Digest (SHA-256): {digest}")
-    print(f"[*] Total Archived Incident Logs: {len(report_resp.get('kayitlar', []))}")
+        digest = report_resp.get("report_sha256_digest") or report_resp.get("butunluk", {}).get("deger", "N/A")
+        total_incidents = len(report_resp.get("kayitlar", report_resp.get("incidents", [])))
 
-    # Output JSON summary for processing
-    output_summary = {
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "stats": stats_resp,
-        "crypto_digest_sha256": digest,
-        "results": results
-    }
-    with open("ai_engine/simulation_report.json", "w", encoding="utf-8") as f:
-        json.dump(output_summary, f, indent=2, ensure_ascii=False)
+        print(f"[*] Telemetry Ingestion Stats: Total={stats_resp.get('total')}, Benign={stats_resp.get('safe')}, Blocked={stats_resp.get('blocked')}, Threat Ratio={stats_resp.get('threat_ratio')}%")
+        print(f"[*] Cryptographic Forensic Digest (SHA-256): {digest}")
+        print(f"[*] Total Archived Incident Logs: {total_incidents}")
 
-    print("\n[✓] Threat simulation finished. Detailed report saved to 'ai_engine/simulation_report.json'.")
+        output_summary = {
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "stats": stats_resp,
+            "crypto_digest_sha256": digest,
+            "results": results
+        }
+        report_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "simulation_report.json")
+        with open(report_path, "w", encoding="utf-8") as f:
+            json.dump(output_summary, f, indent=2, ensure_ascii=False)
+        print(f"\n[✓] Threat simulation finished. Detailed report saved to '{report_path}'.")
+    except Exception as e:
+        print(f"[!] Warning fetching post-simulation metrics: {e}")
 
 if __name__ == "__main__":
     run_simulation()

@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-11-02 16:46:07",
+  "timestamp": "2026-11-02 16:50:52",
   "stats": {
-    "total": 206,
-    "safe": 135,
-    "blocked": 71,
-    "threat_ratio": 34.47
+    "total": 216,
+    "safe": 139,
+    "blocked": 77,
+    "threat_ratio": 35.65
   },
-  "crypto_digest_sha256": "bde67e8e52b446892b939c4285978ef854a8b892f437053a790491f661f4ea84",
+  "crypto_digest_sha256": "ce1ae8fccd2d1155b096227a080635fa07a942b206478a735017e4f082bfe373",
   "results": [
     {
       "id": "THREAT-001",
@@ -18,7 +18,7 @@
       "score": 100,
       "mitre": "T1566.002: Homograph Phishing",
       "reason": "Adli Güvenlik Tespiti: 'xn--pple-43d.com/login/auth.php' Uluslararası Karakter Sahtekarlığı (IDN/Punycode Homograph Saldırısı)!",
-      "latency_ms": 1400.46,
+      "latency_ms": 23.67,
       "success": true
     },
     {
@@ -31,7 +31,7 @@
       "score": 100,
       "mitre": "T1056: Input Capture (Credential Harvesting)",
       "reason": "Kimlik Avı Koruması: 'chase-bank-verify-account.pages.dev/l...' Ücretsiz bulut altyapısında yetkisiz şifre toplama formu tespit edildi!",
-      "latency_ms": 1466.56,
+      "latency_ms": 12.52,
       "success": true
     },
     {
@@ -44,7 +44,7 @@
       "score": 99,
       "mitre": "T1566.002: Spearphishing Link",
       "reason": "AI Model Tespiti: 'paypal-security-verification-center.x...' Sahte Marka Taklidi (Brand Impersonation / Spoofing)!",
-      "latency_ms": 1475.46,
+      "latency_ms": 13.93,
       "success": true
     },
     {
@@ -57,7 +57,7 @@
       "score": 95,
       "mitre": "T1566.002: Machine Learning Phishing Detection",
       "reason": "AI Model Tespiti: 'secure-banking-portal-auth-reset-kyc-...' Sahte/Oltalama URL Yapısı (%95 Risk)!",
-      "latency_ms": 897.94,
+      "latency_ms": 15.34,
       "success": true
     },
     {
@@ -70,7 +70,7 @@
       "score": 95,
       "mitre": "T1566.002: Machine Learning Phishing Detection",
       "reason": "AI Model Tespiti: 'super-casino-slot-bahis-jackpot.com/play' Sahte/Oltalama URL Yapısı (%95 Risk)!",
-      "latency_ms": 949.89,
+      "latency_ms": 14.46,
       "success": true
     },
     {
@@ -83,7 +83,7 @@
       "score": 0,
       "mitre": "None",
       "reason": "Sistem Dokunulmaz Servisi: Güvenli Altyapı",
-      "latency_ms": 5.48,
+      "latency_ms": 3.82,
       "success": true
     },
     {
@@ -96,7 +96,7 @@
       "score": 0,
       "mitre": "None",
       "reason": "Sistem Dokunulmaz Servisi: Güvenli Altyapı",
-      "latency_ms": 4.74,
+      "latency_ms": 7.15,
       "success": true
     }
   ]
